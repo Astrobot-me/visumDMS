@@ -14,11 +14,7 @@ ALERT_THRESHOLD = 3  # Number of yawns for an alert
 ALERT_INTERVAL = 10  # Time interval in seconds
 # ALERT_SOUND_DURATION = 15
 
-# Initialize variables
-yawn_counter = 0
-YAWNING_STATUS  = ['YAWNING',"NOT_YAWNING"]
-yawning = YAWNING_STATUS[1] # YAWNING
-start_time = time.time()
+
 
 class YawnDetection:
 
