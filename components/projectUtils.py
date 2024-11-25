@@ -1,21 +1,11 @@
-import cv2,maths
+import cv2
+import math
 
 class UtlilitesFunction:
     def __init__(self):
         pass
 
     def findDistance(self,point1, point2, img=None):
-        """
-        Find the distance between two landmarks based on their
-        index numbers.
-        :param p1: Point1
-        :param p2: Point2
-        :param img: Image to draw on.
-        :param draw: Flag to draw the output on the image.
-        :return: Distance between the points
-                 Image with output drawn
-                 Line information
-        """
 
         x1, y1 = point1
         x2, y2 = point2

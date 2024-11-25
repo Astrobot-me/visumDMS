@@ -1,10 +1,14 @@
-from utilities import UtlilitesFunction
+# import sys
+# sys.path.append(r'C:\Users\adity\OneDrive\Documents\drivermonitor\UmbrelaCorporation\modules\projectUtils.py')
+
+
+from .projectUtils import UtlilitesFunction
 import cv2
 
 
 class EyeAspectRatio:
 
-    def __init__(self,facial_landmarks):
+    def __init__(self):
         self.p1_RIGHT,self.p2_RIGHT,self.p3_RIGHT,self.p4_RIGHT,self.p5_RIGHT,self.p6_RIGHT = [33,133,144,160,153,158]
         self.p1_LEFT,self.p2_LEFT,self.p3_LEFT,self.p4_LEFT,self.p5_LEFT,self.p6_LEFT = [263,262,373,387,380,385]
         self.N1,self.N2 = [219,439]
@@ -20,15 +24,15 @@ class EyeAspectRatio:
             # print(face)
             for id in self.p1_RIGHT, self.p2_RIGHT , self.p3_RIGHT , self.p4_RIGHT , self.p5_RIGHT , self.p6_RIGHT:
                 x,y = face[id]
-                cv2.circle(img,center=(x,y),radius=2,color=(255,255,0),thickness=cv2.FILLED)
+                cv2.circle(image,center=(x,y),radius=2,color=(255,255,0),thickness=cv2.FILLED)
             
             for id in self.p1_LEFT,self.p2_LEFT,self.p3_LEFT,self.p4_LEFT,self.p5_LEFT,self.p6_LEFT:
                 x,y = face[id]
-                cv2.circle(img,center=(x,y),radius=2,color=(255,255,0),thickness=cv2.FILLED)
+                cv2.circle(image,center=(x,y),radius=2,color=(255,255,0),thickness=cv2.FILLED)
             
             # Right EyePoint Distance Calculation
             RIGHT_length1,info,image = self.utility.findDistance(face[self.p5_RIGHT],face[self.p6_RIGHT],image)
-            RIGHT_length2,info,image = self.utility.findDistance(face[self.p3_RIGHT],p4_RIGHT,image)
+            RIGHT_length2,info,image = self.utility.findDistance(face[self.p3_RIGHT],face[self.p4_RIGHT],image)
             RIGHT_length3,info,image = self.utility.findDistance(face[self.p2_RIGHT],face[self.p1_RIGHT],image)
 
             # Left EyePoint Distance Calculation

@@ -6,7 +6,7 @@ class HeadPose:
     def __init__(self):
         self.pitch_array = []
         self.yaw_array = []
-        self.self.FACE_STATES_PITCH = ['LOOKING_UP','FACE_UP','LOOKING_DOWN','FACE_DOWN']
+        self.FACE_STATES_PITCH = ['LOOKING_UP','FACE_UP','LOOKING_DOWN','FACE_DOWN']
         self.FACE_STATES_YAW = ['LOOKING_LEFT ','FACE_LEFT','LOOKING_RIGHT','FACE_RIGHT']
         self.COMBINED_STATES = ['TOP_LEFT',"TOP_RIGHT","BOTTOM_LEFT","BOTTOM_RIGHT"]
         self.CURRENT_STATE = "NO_STATE"
@@ -16,9 +16,9 @@ class HeadPose:
 
         #getting image info
         img_h, img_w,img_channel = image.shape
-        if face_ladmarks.multi_face_landmarks:
+        if face_landmarks.multi_face_landmarks:
        
-            for landmarks in face_ladmarks.multi_face_landmarks:
+            for landmarks in face_landmarks.multi_face_landmarks:
                 face_2dCords = []
                 face_3dCords = []
                 
@@ -155,17 +155,17 @@ class HeadPose:
        
         window_size = 6
 
-        if(len(pitch_array)>window_size):
+        if(len(self.pitch_array)>window_size):
             pitch_array.pop(0)
 
-        if(len(yaw_array)>window_size):
+        if(len(self.yaw_array)>window_size):
             yaw_array.pop(0)
 
-        pitch_series = pd.Series(pitch_array)  
-        yaw_series = pd.Series(yaw_array)  
+        pitch_series = pd.Series(self.pitch_array)  
+        yaw_series = pd.Series(self.yaw_array)  
         
-        pitch_SMA = pitch_series.rolling(window_size).mean().iloc[-1] if len(pitch_array)>=window_size else 0
-        yaw_SMA = yaw_series.rolling(window_size).mean().iloc[-1] if len(yaw_array)>=window_size else 0
+        pitch_SMA = pitch_series.rolling(window_size).mean().iloc[-1] if len(self.pitch_array)>=window_size else 0
+        yaw_SMA = yaw_series.rolling(window_size).mean().iloc[-1] if len(self.yaw_array)>=window_size else 0
             
         # print(f"Rolling Mean - pitch: {pitch_SMA}, yaw: {yaw_SMA}")
         return pitch_SMA,yaw_SMA

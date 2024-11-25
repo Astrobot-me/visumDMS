@@ -1,17 +1,20 @@
-from modules.eyeaspectRatio import EyeAspectRatio
-from modules import HeadPose
-from modules import YawnStatus
-from modules import faceMesh
-from modules import eyeballTrack
-from modules import utilities
+# import sys
+# print(sys.path)
+
+from components.eyeaspectRatio import EyeAspectRatio
+from components.HeadPose import HeadPose
+from components.YawnStatus import YawnDetection
+from components.faceMesh import GetFaceMesh
+from components.eyeballTrack import Eyeball
+from components.projectUtils import UtlilitesFunction
 import cv2,time  
 
 capture = cv2.VideoCapture(0,cv2.CAP_DSHOW)
-meshDraw = faceMesh.GetFaceMesh()
-headpose = HeadPose.HeadPose()
-eyeaspectratio = eyeaspectRatio.EyeAspectRatio()
-yawnstatus = YawnStatus.YawnDetection()
-eyeballtrack = eyeballTrack.Eyeball()
+meshDraw = GetFaceMesh()
+headpose = HeadPose()
+eyeaspectratio = EyeAspectRatio()
+yawnstatus = YawnDetection()
+eyeballtrack = Eyeball()
 
 def getVideoFeed():
     while True:
@@ -25,7 +28,7 @@ def getVideoFeed():
             #processing facial landmarks for different attributes 
             if facial_landmarks:
                 #getting Head Tilt Status
-                frame,currentState,combinedstate = headpose.getHeadTiltStatus(face_landmarks,frame)
+                frame,currentState,combinedstate = headpose.getHeadTiltStatus(facial_landmarks,frame)
 
                 #getting Eye Aspect Ratio
                 meanEAR, right_EAR, left_EAR , eye_STATUS = eyeaspectratio.getEARs(faces,frame)

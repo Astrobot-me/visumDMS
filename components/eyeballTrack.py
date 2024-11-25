@@ -14,10 +14,10 @@ class Eyeball:
 
         # To store iris data
         self.history_length = 50
-        self.left_eye_horizontal = deque(maxlen=history_length)
-        self.left_eye_vertical = deque(maxlen=history_length)
-        self.right_eye_horizontal = deque(maxlen=history_length)
-        self.right_eye_vertical = deque(maxlen=history_length)
+        self.left_eye_horizontal = deque(maxlen=self.history_length)
+        self.left_eye_vertical = deque(maxlen=self.history_length)
+        self.right_eye_horizontal = deque(maxlen=self.history_length)
+        self.right_eye_vertical = deque(maxlen=self.history_length)
 
         #Eye ball status 
 
