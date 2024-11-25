@@ -1,12 +1,67 @@
+from faceMesh import GetFaceMesh
+from utilities import UtlilitesFunction
+import cv2
+
+
 class EyeAspectRatio:
 
     def __init__(self,facial_landmarks):
-        self.p1_RIGHT = face[33]
-        self.p2_RIGHT = face[133]
-        self.p3_RIGHT = face[144]
-        p4_RIGHT = face[160]
-        p5_RIGHT = face[153]
-        p6_RIGHT = face[158] 
+        self.p1_RIGHT,self.p2_RIGHT,self.p3_RIGHT,self.p4_RIGHT,self.p5_RIGHT,self.p6_RIGHT = [33,133,144,160,153,158]
+        self.p1_LEFT,self.p2_LEFT,self.p3_LEFT,self.p4_LEFT,self.p5_LEFT,self.p6_LEFT = [263,262,373,387,380,385]
+        self.N1,self.N2 = [219,439]
+        self.ear = [0.262,0.256,0.255,0.254,0.262]
+        self.EAR_THRESHOLD = 0.270
 
-    def getEARs(self,facial_landmarks,image):
-        pass
+        self.utility = UtlilitesFunction()
+
+
+    def getEARs(self,faces,image):
+        if faces:
+            face = faces[0]
+            # print(face)
+            for id in self.p1_RIGHT, self.p2_RIGHT , self.p3_RIGHT , self.p4_RIGHT , self.p5_RIGHT , self.p6_RIGHT:
+                x,y = face[id]
+                cv2.circle(img,center=(x,y),radius=2,color=(255,255,0),thickness=cv2.FILLED)
+            
+            for id in self.p1_LEFT,self.p2_LEFT,self.p3_LEFT,self.p4_LEFT,self.p5_LEFT,self.p6_LEFT:
+                x,y = face[id]
+                cv2.circle(img,center=(x,y),radius=2,color=(255,255,0),thickness=cv2.FILLED)
+            
+            # Right EyePoint Distance Calculation
+            RIGHT_length1,info,image = self.utility.findDistance(face[self.p5_RIGHT],face[self.p6_RIGHT],image)
+            RIGHT_length2,info,image = self.utility.findDistance(face[self.p3_RIGHT],p4_RIGHT,image)
+            RIGHT_length3,info,image = self.utility.findDistance(face[self.p2_RIGHT],face[self.p1_RIGHT],image)
+
+            # Left EyePoint Distance Calculation
+            LEFT_length1,info,image = self.utility.findDistance(face[self.p5_LEFT],face[self.p6_LEFT],image)
+            LEFT_length2,info,image = self.utility.findDistance(face[self.p3_LEFT],face[self.p4_LEFT],image)
+            LEFT_length3,info,image = self.utility.findDistance(face[self.p2_LEFT],face[self.p1_LEFT],image)
+
+            #Calculating Ear Aspect Ratio 
+            EAR_ASPECT_RATIO_RIGHT = ((RIGHT_length2+RIGHT_length1)/2)/(RIGHT_length3)
+            print(f"Right Eye EAR: {EAR_ASPECT_RATIO_RIGHT}")
+
+            #Calculating Ear Aspect Ratio 
+            EAR_ASPECT_RATIO_LEFT = ((LEFT_length2+LEFT_length1)/2)/(LEFT_length3)
+            print(f"Left Eye EAR: {EAR_ASPECT_RATIO_LEFT}")
+
+            AVERAGE_EAR = (EAR_ASPECT_RATIO_LEFT+EAR_ASPECT_RATIO_RIGHT)/2
+            
+
+            self.ear.append(AVERAGE_EAR)
+
+            if(len(self.ear)>5):
+                self.ear.pop(0)
+
+            print(self.ear)
+            newEAR = sum(self.ear)/len(self.ear)
+
+            if newEAR < self.EAR_THRESHOLD:
+                # BLINK_COUNT = BLINK_COUNT + 1
+                OBJECT_STATUS = "EYE_ABSENT"
+                print(f"STATUS: {OBJECT_STATUS}")
+            else:
+                OBJECT_STATUS = "EYE_PRESENT"
+                print(f"STATUS: {OBJECT_STATUS}")
+
+            return newEAR,EAR_ASPECT_RATIO_RIGHT,EAR_ASPECT_RATIO_LEFT,OBJECT_STATUS
