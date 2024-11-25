@@ -2,7 +2,7 @@ import cv2
 import numpy
 import pandas as pd
 
-class BodyPose:
+class HeadPose:
     def __init__(self):
         self.pitch_array = []
         self.yaw_array = []
@@ -33,8 +33,83 @@ class BodyPose:
                         x,y = int(lnd.x * img_w), int(lnd.y * img_h)
                         face_2dCords.append([x,y])
                         face_3dCords.append([x,y,lnd.z])
+            
+
         else:
-            return image         
+            return image
+
+
+        face_2dCords = numpy.array(face_2dCords,dtype=numpy.float64)
+        face_3dCords = numpy.array(face_3dCords,dtype=numpy.float64)
+
+
+        focal_length = 1 * img_w
+        cameraMatrix = numpy.array([[
+            focal_length,0,img_h/2
+        ],[
+            0,focal_length,img_w/2
+        ],[
+            0,0,1
+        ]],dtype=numpy.float64)
+
+        distortionMatrix = numpy.zeros((4,1))
+        isTranslate, rvec, tvec = cv2.solvePnP(face_3dCords,face_2dCords,cameraMatrix,distortionMatrix) 
+        rotationMatrix, _ = cv2.Rodrigues(rvec)
+
+        rotationAngles,mtxR,mtxQ,qx,qy,qz = cv2.RQDecomp3x3(rotationMatrix)
+    
+        pitch= rotationAngles[0]
+        yaw = rotationAngles[1]
+        roll = rotationAngles[2]
+
+        # # Normalized Values of pitch,yaw & roll
+        pitch = pitch * 360
+        yaw = yaw * 360
+        roll = roll * 360
+    
+        pitch,yaw = self.calculateMovingAvarage(pitch,yaw)
+
+        currentstate,combinedstate = self.getHeadPos(pitch,yaw)
+
+        # if(CurrentStateText1!=None):
+        #     cv2.putText(image,CurrentStateText1, (200,30),fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=2,color=(0,0,255),thickness=2)
+        # if(CurrentStateText2 != None):
+        #     cv2.putText(image,CurrentStateText2, (200,300),fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=2,color=(0,0,255),thickness=2)
+
+
+        print(f"Pitch :{pitch}, Yaw: {yaw}, Roll:{roll}")
+        axis = numpy.float32([[10, 0, 0], [0, 10, 0], [0, 0, 10]])
+        nose3d_realization,_ = cv2.projectPoints(axis,rvec,tvec,cameraMatrix,distortionMatrix)
+    
+        #dynamic Scaling of head pose line 
+        base_scaling_factor = 10
+        distance_from_camera = tvec[2][0]
+
+        dynamic_scaling_factor = base_scaling_factor/max(1,distance_from_camera/1000)
+        
+        if nose3d_realization is not None:
+            # nose_point = (int(landmarks[1].x * img_w), int(landmarks[1].y * img_h))
+            
+            x_axis = (int(nose3d_realization[0][0][0]), int(nose3d_realization[0][0][1]))
+            y_axis = (int(nose3d_realization[1][0][0]), int(nose3d_realization[1][0][1]))
+            z_axis = (int(nose3d_realization[2][0][0]), int(nose3d_realization[2][0][1]))
+
+
+            # Ensure nose3d_realization has enough points before accessing them
+            if len(nose3d_realization) >= 3:
+                # Draw the X, Y, and Z axes
+                cv2.line(image, Nose_2dCords,x_axis , (0, 0, 255), 3)  # X-axis (red)
+                cv2.line(image, Nose_2dCords,y_axis , (0, 255, 0), 3)  # Y-axis (green)
+                cv2.line(image, Nose_2dCords, z_axis, (255, 0, 0), 3)  # Z-axis (blue)
+
+
+        
+        # Add the text on the image
+        cv2.putText(image, "x: " + str(numpy.round(pitch, 2)), (500, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(image, "y: " + str(numpy.round(yaw, 2)), (500, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(image, "z: " + str(numpy.round(roll, 2)), (500, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
+        return image, currentstate,combinedstate         
 
 
 
