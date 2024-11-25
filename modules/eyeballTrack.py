@@ -79,6 +79,23 @@ class Eyeball:
                 # Draw eyes and iris for visualization
                 for point in self.LEFT_EYE + self.RIGHT_EYE + self.LEFT_IRIS + self.RIGHT_IRIS:
                     cv2.circle(frame, (int(landmarks[point][0]), int(landmarks[point][1])), 2, (255, 0, 0), -1)  # Blue Circles
+
+                left_eye = {
+                    'lh':left_horizontal,
+                    'lv':left_vertical,
+                    'lhd':left_horizontal_direction,
+                    'lvd':left_vertical_direction
+                }
+
+                right_eye = {
+                    'rh':left_horizontal,
+                    'rv':left_vertical,
+                    'rhd':left_horizontal_direction,
+                    'rvd':left_vertical_direction
+                }
+            
+        return left_eye,right_eye
+
         
 
 

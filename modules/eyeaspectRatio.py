@@ -1,4 +1,3 @@
-from faceMesh import GetFaceMesh
 from utilities import UtlilitesFunction
 import cv2
 
