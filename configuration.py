@@ -10,7 +10,7 @@ from components.projectUtils import UtlilitesFunction
 import cv2,time  
 
 capture = cv2.VideoCapture(0,cv2.CAP_DSHOW)
-meshDraw = GetFaceMesh()
+meshDraw = GetFaceMesh(refine_landmarks=True)
 headpose = HeadPose()
 eyeaspectratio = EyeAspectRatio()
 yawnstatus = YawnDetection()
@@ -39,9 +39,9 @@ def getVideoFeed():
                 #getting eyeball tracking 
                 left_eye,right_eye = eyeballtrack.getIrisPos(facial_landmarks,frame)   
 
-                cv2.putText(image, f"currentState {currentState}", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                cv2.putText(image, f"mean EAR {meanEAR}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                cv2.putText(image, f" Yawn Text : {yawnText}", (10, 180), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                cv2.putText(frame, f"currentState {currentState}", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                cv2.putText(frame, f"mean EAR {meanEAR}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                cv2.putText(frame, f" Yawn Text : {yawnText}", (10, 180), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                 # cv2.putText(image, f"Yawn Status: {self.yawnign}", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
                 cv2.imshow("window",frame)

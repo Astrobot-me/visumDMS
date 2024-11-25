@@ -5,13 +5,13 @@ import math
 
 class GetFaceMesh:
 
-    def __init__(self, staticMode=False, maxFaces=1, minDetectionCon=0.5, minTrackCon=0.5,landmark=False):
+    def __init__(self, staticMode=False, maxFaces=1, minDetectionCon=0.5, minTrackCon=0.5,refine_landmarks=False):
     
         self.staticMode = staticMode
         self.maxFaces = maxFaces
         self.minDetectionCon = minDetectionCon
         self.minTrackCon = minTrackCon
-        self.landmark = landmark
+        self.refine_landmarks = refine_landmarks
 
         self.mpDraw = mediapipe.solutions.drawing_utils
         self.mpFaceMesh = mediapipe.solutions.face_mesh
@@ -20,7 +20,7 @@ class GetFaceMesh:
                                                  max_num_faces=self.maxFaces,
                                                  min_detection_confidence=self.minDetectionCon,
                                                  min_tracking_confidence=self.minTrackCon,
-                                                 refine_landmarks=self.landmark)
+                                                 refine_landmarks=self.refine_landmarks)
         self.drawSpec = self.mpDraw.DrawingSpec(thickness=1, circle_radius=1)
 
     def findFaceMesh(self, img, draw=True):

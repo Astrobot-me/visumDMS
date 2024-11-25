@@ -11,7 +11,8 @@ class HeadPose:
         self.COMBINED_STATES = ['TOP_LEFT',"TOP_RIGHT","BOTTOM_LEFT","BOTTOM_RIGHT"]
         self.CURRENT_STATE = "NO_STATE"
         self.CURRENT_COMBINED_STATE = "N0_STATE"
-
+        self.window_size = 6
+        
     def getHeadTiltStatus(self,face_landmarks,image):
 
         #getting image info
@@ -153,19 +154,19 @@ class HeadPose:
         self.pitch_array.append(pitch)
         self.yaw_array.append(yaw)
        
-        window_size = 6
+        
 
-        if(len(self.pitch_array)>window_size):
-            pitch_array.pop(0)
+        if(len(self.pitch_array)>self.window_size):
+            self.pitch_array.pop(0)
 
-        if(len(self.yaw_array)>window_size):
-            yaw_array.pop(0)
+        if(len(self.yaw_array)>self.window_size):
+            self.yaw_array.pop(0)
 
         pitch_series = pd.Series(self.pitch_array)  
         yaw_series = pd.Series(self.yaw_array)  
         
-        pitch_SMA = pitch_series.rolling(window_size).mean().iloc[-1] if len(self.pitch_array)>=window_size else 0
-        yaw_SMA = yaw_series.rolling(window_size).mean().iloc[-1] if len(self.yaw_array)>=window_size else 0
+        pitch_SMA = pitch_series.rolling(self.window_size).mean().iloc[-1] if len(self.pitch_array)>=self.window_size else 0
+        yaw_SMA = yaw_series.rolling(self.window_size).mean().iloc[-1] if len(self.yaw_array)>=self.window_size else 0
             
         # print(f"Rolling Mean - pitch: {pitch_SMA}, yaw: {yaw_SMA}")
         return pitch_SMA,yaw_SMA
