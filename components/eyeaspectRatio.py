@@ -14,7 +14,8 @@ class EyeAspectRatio:
         self.N1,self.N2 = [219,439]
         self.ear = [0.262,0.256,0.255,0.254,0.262]
         self.EAR_THRESHOLD = 0.270
-
+        self.ANOMALIES = ['UNREL_EAR','LMK_AB']
+        self.ANOMALY = self.ANOMALIES[0]
         self.utility = UtlilitesFunction()
 
 
@@ -68,3 +69,7 @@ class EyeAspectRatio:
                 print(f"STATUS: {OBJECT_STATUS}")
 
             return newEAR,EAR_ASPECT_RATIO_RIGHT,EAR_ASPECT_RATIO_LEFT,OBJECT_STATUS
+        else: 
+            self.ANOMALY = self.ANOMALIES[1]
+            return -1,-1, -1 , self.ANOMALY
+

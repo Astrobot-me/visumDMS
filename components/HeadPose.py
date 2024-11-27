@@ -9,9 +9,11 @@ class HeadPose:
         self.FACE_STATES_PITCH = ['LOOKING_UP','FACE_UP','LOOKING_DOWN','FACE_DOWN']
         self.FACE_STATES_YAW = ['LOOKING_LEFT ','FACE_LEFT','LOOKING_RIGHT','FACE_RIGHT']
         self.COMBINED_STATES = ['TOP_LEFT',"TOP_RIGHT","BOTTOM_LEFT","BOTTOM_RIGHT"]
-        self.CURRENT_STATE = "NO_STATE"
-        self.CURRENT_COMBINED_STATE = "N0_STATE"
+        self.CURRENT_STATE = None
+        self.CURRENT_COMBINED_STATE = None
         self.window_size = 6
+        self.ANOMALIES = ['UNREL_HP','LMK_AB']
+        self.ANOMALY = self.ANOMALIES[0]
         
     def getHeadTiltStatus(self,face_landmarks,image):
 
@@ -37,7 +39,8 @@ class HeadPose:
             
 
         else:
-            return image
+            self.ANOMALY = self.ANOMALIES[1]
+            return image,self.ANOMALY,self.ANOMALY 
 
 
         face_2dCords = numpy.array(face_2dCords,dtype=numpy.float64)
@@ -71,6 +74,16 @@ class HeadPose:
         pitch,yaw = self.calculateMovingAvarage(pitch,yaw)
 
         currentstate,combinedstate = self.getHeadPos(pitch,yaw)
+
+        #seeting states to unreliable reign 
+        if(currentstate == None and combinedstate == None):
+            combinedstate = self.ANOMALIES[1]
+            currentstate = self.ANOMALIES[1]
+        elif (currentstate == None):
+            currentstate = self.ANOMALIES[1]
+        else: 
+            combinedstate = self.ANOMALIES[1]
+
 
         # if(CurrentStateText1!=None):
         #     cv2.putText(image,CurrentStateText1, (200,30),fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=2,color=(0,0,255),thickness=2)
@@ -110,7 +123,8 @@ class HeadPose:
         cv2.putText(image, "y: " + str(numpy.round(yaw, 2)), (500, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
         cv2.putText(image, "z: " + str(numpy.round(roll, 2)), (500, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
-        return image, currentstate,combinedstate         
+        return image,currentstate,combinedstate
+
 
 
 
