@@ -10,7 +10,7 @@ class EyeAspectRatio:
 
     def __init__(self):
         self.p1_RIGHT,self.p2_RIGHT,self.p3_RIGHT,self.p4_RIGHT,self.p5_RIGHT,self.p6_RIGHT = [33,133,144,160,153,158]
-        self.p1_LEFT,self.p2_LEFT,self.p3_LEFT,self.p4_LEFT,self.p5_LEFT,self.p6_LEFT = [263,262,373,387,380,385]
+        self.p1_LEFT,self.p2_LEFT,self.p3_LEFT,self.p4_LEFT,self.p5_LEFT,self.p6_LEFT = [263,362,373,387,380,385]
         self.N1,self.N2 = [219,439]
         self.ear = [0.262,0.256,0.255,0.254,0.262]
         self.EAR_THRESHOLD = 0.270

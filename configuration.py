@@ -53,43 +53,34 @@ def getVideoFeed():
                     # Getting Head Tilt Status
                     _, currentState, combinedstate = headpose.getHeadTiltStatus(facial_landmarks, frame)
 
-                except Exception as e:
-                    currentState = "Not Detecting"
-                    combinedstate = "Not Detecting"
-                    print(f"Head pose detection error: {e}")
-
-                try:
                     # Getting Eye Aspect Ratio
                     meanEAR, right_EAR, left_EAR, eye_STATUS = eyeaspectratio.getEARs(faces, frame)
                     print(eye_STATUS)
-                except Exception as e:
-                    meanEAR, eye_STATUS = "Not Detecting", "Not Detecting"
-                    print(f"Eye detection error: {e}")
 
-                try:
                     # Getting Yawn Status
                     _, yawnText = yawnstatus.getYawnStatusText(facial_landmarks, frame)
-                except Exception as e:
-                    yawnText = "Not Detecting"
-                    print(f"Yawn detection error: {e}")
 
-                try:
                     # Getting eyeball tracking
                     left_eye, right_eye = eyeballtrack.getIrisPos(facial_landmarks, frame)
+
                 except Exception as e:
+                    # Fallback values for all features
+                    currentState = "Not Detecting"
+                    combinedstate = "Not Detecting"
+                    meanEAR, eye_STATUS = "Not Detecting", "Not Detecting"
+                    yawnText = "Not Detecting"
                     left_eye, right_eye = "Not Detecting", "Not Detecting"
-                    print(f"Eyeball tracking error: {e}")
- 
+                    print(f"Error during detection: {e}")
 
                 # Display information on the frame
                 cv2.putText(frame, f"currentState: {currentState}", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                 cv2.putText(frame, f"mean EAR: {meanEAR}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                 cv2.putText(frame, f"Yawn Text: {yawnText}", (10, 180), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                
-                if analysis_dict != None:
-                    print("Emodict",analysis_dict)
+
+                if analysis_dict is not None:
+                    print("Emodict", analysis_dict)
                     cv2.putText(frame, f"Recog emotion: {analysis_dict['dominantemotion']}", (10, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                    pass 
+ 
 
             else:
                 # No facial landmarks detected

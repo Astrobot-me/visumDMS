@@ -9,8 +9,9 @@ class HeadPose:
         self.FACE_STATES_PITCH = ['LOOKING_UP','FACE_UP','LOOKING_DOWN','FACE_DOWN']
         self.FACE_STATES_YAW = ['LOOKING_LEFT ','FACE_LEFT','LOOKING_RIGHT','FACE_RIGHT']
         self.COMBINED_STATES = ['TOP_LEFT',"TOP_RIGHT","BOTTOM_LEFT","BOTTOM_RIGHT"]
-        self.CURRENT_STATE = None
-        self.CURRENT_COMBINED_STATE = None
+        self.CENTRE_STATE = "FACE_CENTRE"
+        self.CURRENT_STATE = self.CENTRE_STATE
+        self.CURRENT_COMBINED_STATE = self.CURRENT_STATE
         self.window_size = 6
         self.ANOMALIES = ['UNREL_HP','LMK_AB']
         self.ANOMALY = self.ANOMALIES[0]
@@ -71,18 +72,18 @@ class HeadPose:
         yaw = yaw * 360
         roll = roll * 360
     
-        pitch,yaw = self.calculateMovingAvarage(pitch,yaw)
+        pitch,yaw = self.calculateMovingAverage(pitch,yaw)
 
         currentstate,combinedstate = self.getHeadPos(pitch,yaw)
 
         #seeting states to unreliable reign 
-        if(currentstate == None and combinedstate == None):
-            combinedstate = self.ANOMALIES[1]
-            currentstate = self.ANOMALIES[1]
-        elif (currentstate == None):
-            currentstate = self.ANOMALIES[1]
-        else: 
-            combinedstate = self.ANOMALIES[1]
+        # if(currentstate == "FACE_CENTRE" and combinedstate == "FACE_CENTRE"):
+        #     combinedstate = self.ANOMALIES[0]
+        #     currentstate = self.ANOMALIES[0]
+        # elif (currentstate == "FACE_CENTRE"):
+        #     currentstate = self.ANOMALIES[0]
+        # else: 
+        #     combinedstate = self.ANOMALIES[0]
 
 
         # if(CurrentStateText1!=None):
@@ -92,7 +93,13 @@ class HeadPose:
 
 
         print(f"Pitch :{pitch}, Yaw: {yaw}, Roll:{roll}")
-        axis = numpy.float32([[10, 0, 0], [0, 10, 0], [0, 0, 10]])
+        axis_length = 50
+        axis = numpy.float32([
+        [axis_length, 0, 0],  # X-axis (red)
+        [0, axis_length, 0],  # Y-axis (green)
+        [0, 0, -axis_length]   # Z-axis (blue)
+        ]) 
+        # axis = numpy.float32([[10, 0, 0], [0, 10, 0], [0, 0, 10]])
         nose3d_realization,_ = cv2.projectPoints(axis,rvec,tvec,cameraMatrix,distortionMatrix)
     
         #dynamic Scaling of head pose line 
@@ -104,9 +111,13 @@ class HeadPose:
         if nose3d_realization is not None:
             # nose_point = (int(landmarks[1].x * img_w), int(landmarks[1].y * img_h))
             
-            x_axis = (int(nose3d_realization[0][0][0]), int(nose3d_realization[0][0][1]))
-            y_axis = (int(nose3d_realization[1][0][0]), int(nose3d_realization[1][0][1]))
-            z_axis = (int(nose3d_realization[2][0][0]), int(nose3d_realization[2][0][1]))
+            # x_axis = (int(nose3d_realization[0][0][0]), int(nose3d_realization[0][0][1]))
+            # y_axis = (int(nose3d_realization[1][0][0]), int(nose3d_realization[1][0][1]))
+            # z_axis = (int(nose3d_realization[2][0][0]), int(nose3d_realization[2][0][1]))
+
+            x_axis = tuple(nose3d_realization[0].ravel().astype(int))
+            y_axis = tuple(nose3d_realization[1].ravel().astype(int))
+            z_axis = tuple(nose3d_realization[2].ravel().astype(int))
 
 
             # Ensure nose3d_realization has enough points before accessing them
@@ -129,6 +140,10 @@ class HeadPose:
 
 
     def getHeadPos(self,pitch=0,yaw=0):
+
+        self.CURRENT_STATE = self.CENTRE_STATE
+        self.CURRENT_COMBINED_STATE = self.CURRENT_STATE
+
         if(pitch >=  13.5 and pitch < 19):
             self.CURRENT_STATE = self.FACE_STATES_PITCH[0]
         elif(pitch >= 19):
@@ -163,7 +178,7 @@ class HeadPose:
         return self.CURRENT_STATE,self.CURRENT_COMBINED_STATE
 
 
-    def calculateMovingAvarage(self,pitch:float , yaw:float ) -> tuple: 
+    def calculateMovingAverage(self,pitch:float , yaw:float ) -> tuple: 
 
         self.pitch_array.append(pitch)
         self.yaw_array.append(yaw)
