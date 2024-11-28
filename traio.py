@@ -9,3 +9,9 @@ analysisDict = {
             }
 
 print(analysisDict['dominantemotion'])
+
+
+li = ['a','b']
+
+if 'a' in li :
+    print("Hellow world")

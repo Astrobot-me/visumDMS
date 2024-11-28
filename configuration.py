@@ -8,13 +8,16 @@ from components.faceMesh import GetFaceMesh
 from components.eyeballTrack import Eyeball
 from components.projectUtils import UtlilitesFunction
 from components.faceExpression import FaceExpression
+from process import processData
 
 # Initialize global variables
-currentState = "Not Detecting"
+currentState = "NONE"
 combinedstate = "Not Detecting"
 analysis_dict = None
 terminate = False
 frame = None
+eye_STATUS = "NONE"
+LABEL = "NONE"
 
 # Initialize objects
 capture = cv2.VideoCapture(0, cv2.CAP_DSHOW)
@@ -30,6 +33,9 @@ def getVideoFeed():
     global currentState, combinedstate,analysis_dict  # Declare as global
     global terminate
     global frame
+    global LABEL
+
+    global eye_STATUS
     
     while True:
         isframe, frame = capture.read()
@@ -80,6 +86,10 @@ def getVideoFeed():
                 if analysis_dict is not None:
                     print("Emodict", analysis_dict)
                     cv2.putText(frame, f"Recog emotion: {analysis_dict['dominantemotion']}", (10, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                
+                if LABEL != "NONE":
+                    cv2.putText(frame, f"LABEL: {LABEL}", (10, 250), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+
  
 
             else:
@@ -123,3 +133,11 @@ def getRealEmoText():
             break 
 
         
+def runStateProcessCounter():
+    global LABEL 
+    global terminate,eye_STATUS,currentState
+    while True:
+        time.sleep(1)
+        LABEL = processData(eye_STATUS,currentState)
+        if terminate:
+            break
