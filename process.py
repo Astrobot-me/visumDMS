@@ -1,40 +1,48 @@
 from timerClock import clockTimer
 import time
-clocktimer = clockTimer()
+# clocktimer = clockTimer()
 
 
 STATES = ["CAUTION","SAFE","HAZARD"]
-count = 0
+# count = 0
 headpose_caution_states = ['LOOKING_DOWN','FACE_DOWN','FACE_DOWN','BOTTOM_LEFT','BOTTOM_RIGHT']
 
-def processData(eye_status: str, head_pose: str ):
+def processData(eye_status: str, head_pose: str, counterOBJ ):
 
-    clocktimer.resetTimer()
     message_state = STATES[1]
-    count = 0
+    
 
-    if eye_status == "EYE_PRESENT" :
-        # count = 0
-        clocktimer.resetTimer()
+    if eye_status == "EYE_PRESENT" or  head_pose not in headpose_caution_states:
+        count = 0
+        counterOBJ.resetTimer()
         message_state = STATES[1]
-        return message_state
+        return message_state,count
+
+    elif(eye_status == "EYE_ABSENT" ):
+        count = counterOBJ.getTimerCount(time.time())
+        if count > 0 and count <= 4: 
+            message_state = STATES[0]
+        elif count > 4:
+            message_state = STATES[2]
+
+        return message_state,count
 
     elif( eye_status == "EYE_ABSENT" and head_pose in headpose_caution_states ):
-        count = clocktimer.startTimer(time.time())
+        count = counterOBJ.getTimerCount(time.time())
 
-        if count > 6: 
+        if count > 0 and count <= 6 : 
             message_state = STATES[0]
-        elif count > 10:
+        elif count > 6:
             message_state = STATES[2]
 
-        return message_state
+        return message_state,count
 
     elif(head_pose in headpose_caution_states):
-        count = clocktimer.startTimer(time.time())
+        count = counterOBJ.getTimerCount(time.time())
 
-        if count > 6: 
+        if count > 0 and count <= 8: 
             message_state = STATES[0]
-        elif count > 10:
+        elif count > 8:
             message_state = STATES[2]
         
-        return message_state
+        return message_state,count

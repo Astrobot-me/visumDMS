@@ -9,6 +9,7 @@ from components.eyeballTrack import Eyeball
 from components.projectUtils import UtlilitesFunction
 from components.faceExpression import FaceExpression
 from process import processData
+from timerClock import clockTimer
 
 # Initialize global variables
 currentState = "NONE"
@@ -18,6 +19,8 @@ terminate = False
 frame = None
 eye_STATUS = "NONE"
 LABEL = "NONE"
+count = 0
+
 
 # Initialize objects
 capture = cv2.VideoCapture(0, cv2.CAP_DSHOW)
@@ -89,6 +92,8 @@ def getVideoFeed():
                 
                 if LABEL != "NONE":
                     cv2.putText(frame, f"LABEL: {LABEL}", (10, 250), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+                    cv2.putText(frame, f"COUNT: {count}", (10, 280), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+                    cv2.putText(frame, f"EYE: {eye_STATUS}", (10, 320), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
 
  
 
@@ -129,15 +134,22 @@ def getRealEmoText():
         # except:
         #     pass
         analysis_dict = faceexpression.getFaceExpression(frame)
+        time.sleep(2)
         if terminate:
             break 
 
         
 def runStateProcessCounter():
-    global LABEL 
+
+    clocktimer = clockTimer() # gets the at call time
+
+    clocktimer.resetTimer()
+
+    global LABEL,count 
     global terminate,eye_STATUS,currentState
     while True:
         time.sleep(1)
-        LABEL = processData(eye_STATUS,currentState)
+        LABEL,count = processData(eye_STATUS,currentState,clocktimer)
+        
         if terminate:
             break
