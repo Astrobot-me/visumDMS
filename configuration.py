@@ -67,7 +67,7 @@ def getVideoFeed():
                     print(eye_STATUS)
 
                     # Getting Yawn Status
-                    _, yawnText = yawnstatus.getYawnStatusText(facial_landmarks, frame)
+                    _, yawnText,yawnHistoryLog = yawnstatus.getYawnStatusText(facial_landmarks, frame)
 
                     # Getting eyeball tracking
                     left_eye, right_eye = eyeballtrack.getIrisPos(facial_landmarks, frame)

@@ -13,5 +13,11 @@ print(analysisDict['dominantemotion'])
 
 li = ['a','b']
 
-if 'a' in li :
+if 'a' not in li :
     print("Hellow world")
+else: 
+    print("Relax world")
+
+
+for i in range(10,0,-1):
+    print(i)

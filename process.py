@@ -12,7 +12,7 @@ def processData(eye_status: str, head_pose: str, counterOBJ ):
     message_state = STATES[1]
     
 
-    if eye_status == "EYE_PRESENT" or  head_pose not in headpose_caution_states:
+    if eye_status == "EYE_PRESENT" and  head_pose not in headpose_caution_states:
         count = 0
         counterOBJ.resetTimer()
         message_state = STATES[1]
