@@ -23,3 +23,6 @@ array = ["hello","feloo"]
 if(size>1):
     for i in range(size-1,-1,-1):
         print(array[i])
+
+
+print(len({}.keys()))        

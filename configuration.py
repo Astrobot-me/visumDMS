@@ -12,7 +12,7 @@ from process import processData
 from timerClock import clockTimer
 
 # Initialize global variables
-currentState = "NONE"
+currentHeadState = "NONE"
 combinedstate = "Not Detecting"
 analysis_dict = None
 terminate = False
@@ -20,6 +20,7 @@ frame = None
 eye_STATUS = "NONE"
 LABEL = "NONE"
 count = 0
+yawnAnalysisLog = {}
 
 
 # Initialize objects
@@ -33,7 +34,7 @@ faceexpression = FaceExpression()
 event = Event()
 
 def getVideoFeed():
-    global currentState, combinedstate,analysis_dict  # Declare as global
+    global currentHeadState, combinedstate,analysis_dict,yawnAnalysisLog  # Declare as global
     global terminate
     global frame
     global LABEL
@@ -60,21 +61,21 @@ def getVideoFeed():
             if facial_landmarks:
                 try:
                     # Getting Head Tilt Status
-                    _, currentState, combinedstate = headpose.getHeadTiltStatus(facial_landmarks, frame)
+                    _, currentHeadState, combinedstate = headpose.getHeadTiltStatus(facial_landmarks, frame)
 
                     # Getting Eye Aspect Ratio
                     meanEAR, right_EAR, left_EAR, eye_STATUS = eyeaspectratio.getEARs(faces, frame)
                     print(eye_STATUS)
 
                     # Getting Yawn Status
-                    _, yawnText,yawnHistoryLog = yawnstatus.getYawnStatusText(facial_landmarks, frame)
+                    _, yawnText,yawnAnalysisLog = yawnstatus.getYawnStatusText(facial_landmarks, frame)
 
                     # Getting eyeball tracking
                     left_eye, right_eye = eyeballtrack.getIrisPos(facial_landmarks, frame)
 
                 except Exception as e:
                     # Fallback values for all features
-                    currentState = "Not Detecting"
+                    currentHeadState = "Not Detecting"
                     combinedstate = "Not Detecting"
                     meanEAR, eye_STATUS = "Not Detecting", "Not Detecting"
                     yawnText = "Not Detecting"
@@ -82,7 +83,7 @@ def getVideoFeed():
                     print(f"Error during detection: {e}")
 
                 # Display information on the frame
-                cv2.putText(frame, f"currentState: {currentState}", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                cv2.putText(frame, f"currentHeadState: {currentHeadState}", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                 cv2.putText(frame, f"mean EAR: {meanEAR}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                 cv2.putText(frame, f"Yawn Text: {yawnText}", (10, 180), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
@@ -111,8 +112,7 @@ def getVideoFeed():
     capture.release()
     cv2.destroyAllWindows()
 
-# Calling the function
-# getVideoFeed()
+
 
 
 def getRealEmoText():
@@ -120,19 +120,13 @@ def getRealEmoText():
     
     print("---- WAITING FOR VIDEO FRAME ----")
     event.wait()
-    # try:
-    #     analysis_dict = faceexpression.getFaceExpression(rgb_frame)
-    # except:
-    #     pass
+    
     analysis_dict = faceexpression.getFaceExpression(frame)
     print("---- VIDEO RESUMED && ANLYSIS DICT SET ----")
     event.set() 
 
     while True: 
-        # try: 
-        #     
-        # except:
-        #     pass
+        
         analysis_dict = faceexpression.getFaceExpression(frame)
         time.sleep(2)
         if terminate:
@@ -141,15 +135,16 @@ def getRealEmoText():
         
 def runStateProcessCounter():
 
+    global LABEL,count 
+    global terminate,eye_STATUS,currentHeadState,yawnAnalysisLog
+
     clocktimer = clockTimer() # gets the at call time
 
     clocktimer.resetTimer()
 
-    global LABEL,count 
-    global terminate,eye_STATUS,currentState
     while True:
         time.sleep(1)
-        LABEL,count = processData(eye_STATUS,currentState,clocktimer)
+        LABEL,count = processData(eye_STATUS,currentHeadState,yawnAnalysisLog,clocktimer)
         
         if terminate:
             break

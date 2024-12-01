@@ -57,13 +57,12 @@ class YawnDetection:
                 elif yawn_ratio < YAWN_RATIO_LOWER_THRESHOLD:
                     self.yawning = self.YAWNING_STATUS[1]
 
-                print("History QUEUE ",self.historyQueue)
+                # print("History QUEUE ",self.historyQueue)
 
                 
 
                 cv2.putText(image, f"Yawn Ratio: {yawn_ratio:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                 cv2.putText(image, f"Yawn Count: {self.yawn_counter}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                cv2.putText(image, f"Yawn Status: {self.yawnign}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
                 try:
                     yawnCountTF,yawnLabel = self.getYawnsInTimeFrame(self.historyQueue,YAWN_TIMEFRAME)
@@ -72,6 +71,12 @@ class YawnDetection:
                 except Exception as e: 
                     print("ERROR OCCURED IN getYAWNTF",e)
                     pass
+
+                yawn_analysis = { 
+                    "yawnCountTF":yawnCountTF,
+                    "yawnLabel":yawnLabel
+                }
+
         else:
             return self.ANOMALY , self.ANOMALY,{}
 
@@ -97,7 +102,7 @@ class YawnDetection:
             
             self.yawn_counter = 0
 
-        return image,self.yawning,self.historyQueue
+        return image,self.yawning,yawn_analysis
     
     #calculates successive yawning count in 10 (set to 2 min in dev mode) min duration for frequent yawning detection 
     def getYawnsInTimeFrame(self,yawn_log : list,timePeriod: int ):
@@ -109,13 +114,16 @@ class YawnDetection:
         if(size>1):
             for i in range(size-1,-1,-1):
                 yawnItem = yawn_log[i]['timeStamp']
-                time_frame = self.clocktimer.getTimerCount(yawnItem)
+                event_timeframe = self.clocktimer.getTimerCount(yawnItem)
                 
-                if(time_frame <= timePeriod):
+               
+                if(event_timeframe <= timePeriod and event_timeframe > 0):
+                    # print("event time frame",event_timeframe)
                     yawnCountTF += yawn_log[i]['count']
                 
-            window_frame = self.clocktimer.getTimerCount(curr_time)
-            if(window_frame > timePeriod):
+            window_timeframe = self.clocktimer.getTimerCount(curr_time)
+            # print("window time frame",window_timeframe)
+            if(window_timeframe > timePeriod):
                 self.clocktimer.resetTimer()
                 yawnCountTF = 0
                 

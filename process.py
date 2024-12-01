@@ -7,7 +7,7 @@ STATES = ["CAUTION","SAFE","HAZARD"]
 # count = 0
 headpose_caution_states = ['LOOKING_DOWN','FACE_DOWN','FACE_DOWN','BOTTOM_LEFT','BOTTOM_RIGHT']
 
-def processData(eye_status: str, head_pose: str, counterOBJ ):
+def processData(eye_status: str, head_pose: str,yawnAnalysis: dict, counterOBJ ):
 
     message_state = STATES[1]
     
@@ -20,7 +20,7 @@ def processData(eye_status: str, head_pose: str, counterOBJ ):
 
     elif(eye_status == "EYE_ABSENT" ):
         count = counterOBJ.getTimerCount(time.time())
-        if count > 0 and count <= 4: 
+        if count > 1 and count <= 4: 
             message_state = STATES[0]
         elif count > 4:
             message_state = STATES[2]
@@ -30,7 +30,7 @@ def processData(eye_status: str, head_pose: str, counterOBJ ):
     elif( eye_status == "EYE_ABSENT" and head_pose in headpose_caution_states ):
         count = counterOBJ.getTimerCount(time.time())
 
-        if count > 0 and count <= 6 : 
+        if count > 1 and count <= 6 : 
             message_state = STATES[0]
         elif count > 6:
             message_state = STATES[2]
@@ -40,9 +40,21 @@ def processData(eye_status: str, head_pose: str, counterOBJ ):
     elif(head_pose in headpose_caution_states):
         count = counterOBJ.getTimerCount(time.time())
 
-        if count > 0 and count <= 8: 
+        if count > 1 and count <= 8: 
             message_state = STATES[0]
         elif count > 8:
             message_state = STATES[2]
         
         return message_state,count
+    
+    # elif( eye_status == "EYE_ABSENT" and head_pose in headpose_caution_states ):
+    #     pass
+        # if(len(yawnAnalysis.keys())>0):
+        #     count = counterOBJ.getTimerCount(time.time())
+
+        #     if count > 1 and count <= 6 : 
+        #         message_state = STATES[0]
+        #     elif count > 6:
+        #         message_state = STATES[2]
+
+        #     return message_state,count
