@@ -1,6 +1,7 @@
 import numpy as np
 import time 
 import cv2
+from timerClock import clockTimer
 
 UPPER_LIP = [13]
 LOWER_LIP = [14]
@@ -11,8 +12,9 @@ RIGHT_MOUTH_CORNER = [291]
 YAWN_RATIO_UPPER_THRESHOLD = 0.6  # Upper limit for detecting a yawn
 YAWN_RATIO_LOWER_THRESHOLD = 0.4  # Lower limit to reset the yawning state
 ALERT_THRESHOLD = 3  # Number of yawns for an alert
-ALERT_INTERVAL = 10  # Time interval in seconds
+ALERT_INTERVAL = 20  # Time interval in seconds
 # ALERT_SOUND_DURATION = 15
+YAWN_TIMEFRAME = 120 #600
 
 
 
@@ -26,6 +28,8 @@ class YawnDetection:
         self.ANOMALIES = ['UNREL_YAWN_DATA','LMK_AB']
         self.ANOMALY = self.ANOMALIES[1]
         self.historyQueue = [] # past history queue 
+        self.clocktimer = clockTimer()
+
 
     
     def getYawnStatusText(self,resultSetLandmark,image):
@@ -53,13 +57,21 @@ class YawnDetection:
                 elif yawn_ratio < YAWN_RATIO_LOWER_THRESHOLD:
                     self.yawning = self.YAWNING_STATUS[1]
 
-                print("History QUEUE ",historyQueue)
+                print("History QUEUE ",self.historyQueue)
 
                 
 
                 cv2.putText(image, f"Yawn Ratio: {yawn_ratio:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                 cv2.putText(image, f"Yawn Count: {self.yawn_counter}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                 cv2.putText(image, f"Yawn Status: {self.yawnign}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+
+                try:
+                    yawnCountTF,yawnLabel = self.getYawnsInTimeFrame(self.historyQueue,YAWN_TIMEFRAME)
+                    cv2.putText(image, f"Yawns in TP: {yawnCountTF}", (10, 340), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                    cv2.putText(image, f"Yawn Label: {yawnLabel}", (10, 370), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                except Exception as e: 
+                    print("ERROR OCCURED IN getYAWNTF",e)
+                    pass
         else:
             return self.ANOMALY , self.ANOMALY,{}
 
@@ -67,39 +79,66 @@ class YawnDetection:
         if elapsed_time >= ALERT_INTERVAL :
             self.start_time = time.time()
             #logging to history Queue before setting yawn count to 0
-            if (self.yawnign == 'YAWNING'):
+            
+            if(self.yawn_counter != 0 and self.yawn_counter >0 ):
                 log = {
-                    "status":yawn_status,
-                    "timeStamp":time.time() ,
-                    "count":self.yawn_counter
-                }
-                historyQueue.append(log)
+                "status":"YAWNED",
+                "timeStamp":time.time() ,
+                "count":self.yawn_counter
+                }   
+                self.historyQueue.append(log)
             
             
                 
             #clearing History from yawn history log
 
-            if(len(self.historyQueue)> 20):
+            if(len(self.historyQueue)> 100):
                 self.historyQueue.pop(0)
             
             self.yawn_counter = 0
 
         return image,self.yawning,self.historyQueue
     
-    #calculates successive yawning count in 10 min duration for frequent yawning detection 
-    def getYawnsInTimeFrame(yawn_log: list):
+    #calculates successive yawning count in 10 (set to 2 min in dev mode) min duration for frequent yawning detection 
+    def getYawnsInTimeFrame(self,yawn_log : list,timePeriod: int ):
         size = len(yawn_log)
-        if(size>3):
-            last_yawn = yawn_log[size-1]
-            prev_last_yawn = yawn_log[size-2]
-            antipenultimate_yawn = yawn_log[size-3]
-            #finding last YAWNING Event
+        curr_time = time.time()
+        yawnCountTF = 0
 
-            last2_yawnDuration = float(last_yawn["timeStamp"] - prev_last_yawn["timeStamp"]) 
-            penUltimate_yawnDuration = float(antipenultimate_yawn["timeStamp"] - last_yawn["timeStamp"]) 
+        #requires atleast 2 events 
+        if(size>1):
+            for i in range(size-1,-1,-1):
+                yawnItem = yawn_log[i]['timeStamp']
+                time_frame = self.clocktimer.getTimerCount(yawnItem)
+                
+                if(time_frame <= timePeriod):
+                    yawnCountTF += yawn_log[i]['count']
+                
+            window_frame = self.clocktimer.getTimerCount(curr_time)
+            if(window_frame > timePeriod):
+                self.clocktimer.resetTimer()
+                yawnCountTF = 0
+                
+            
+        yawnLabel = self.getYawnClassfication(yawnCountTF)
+        
+        return yawnCountTF,yawnLabel
 
-    def getYawnClassfication():
-        pass
+                
+        
+
+    def getYawnClassfication(self,yawnCountTF : int):
+        yawnStatus_label = "NORMAL_YAWNING" 
+        
+        if(yawnCountTF>=0 and yawnCountTF <= 4):
+            yawnStatus_label = "NORMAL_YAWNING"
+        elif(yawnCountTF>4 and yawnCountTF <= 8):
+            yawnStatus_label = "MODERATE_YAWNING"
+        elif(yawnCountTF>8 ):
+            yawnStatus_label = "SEVERE_YAWNING"
+        
+        return yawnStatus_label
+
 
         
 

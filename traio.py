@@ -18,6 +18,8 @@ if 'a' not in li :
 else: 
     print("Relax world")
 
-
-for i in range(10,0,-1):
-    print(i)
+size = 2
+array = ["hello","feloo"]
+if(size>1):
+    for i in range(size-1,-1,-1):
+        print(array[i])
