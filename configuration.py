@@ -87,7 +87,7 @@ def getVideoFeed():
                 cv2.putText(frame, f"Yawn Text: {yawnText}", (10, 180), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
                 if analysis_dict is not None:
-                    print("Emodict", analysis_dict)
+                    # print("Emodict", analysis_dict)
                     cv2.putText(frame, f"Recog emotion: {analysis_dict['dominantemotion']}", (10, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                 
                 if LABEL != "NONE":
