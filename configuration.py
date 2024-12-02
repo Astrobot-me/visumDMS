@@ -21,6 +21,9 @@ eye_STATUS = "NONE"
 LABEL = "NONE"
 count = 0
 yawnAnalysisLog = {}
+dataDict = {
+    'data':True
+}
 
 
 # Initialize objects
@@ -34,7 +37,8 @@ faceexpression = FaceExpression()
 event = Event()
 
 def getVideoFeed():
-    global currentHeadState, combinedstate,analysis_dict,yawnAnalysisLog  # Declare as global
+    global currentHeadState, combinedstate,analysis_dict,yawnAnalysisLog 
+    global dataDict # Declare as global
     global terminate
     global frame
     global LABEL
@@ -58,7 +62,7 @@ def getVideoFeed():
             frame, faces, facial_landmarks = meshDraw.findFaceMesh(frame, draw=True)
 
             # Processing facial landmarks for different attributes
-            if facial_landmarks:
+            if facial_landmarks.multi_face_landmarks:
                 try:
                     # Getting Head Tilt Status
                     _, currentHeadState, combinedstate = headpose.getHeadTiltStatus(facial_landmarks, frame)
@@ -89,7 +93,10 @@ def getVideoFeed():
 
                 if analysis_dict is not None:
                     # print("Emodict", analysis_dict)
-                    cv2.putText(frame, f"Recog emotion: {analysis_dict['dominantemotion']}", (10, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                    try:
+                        cv2.putText(frame, f"Recog emotion: {analysis_dict['dominantemotion']}", (10, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                    except Exception as e:
+                        print(f"Error Occured in Emotion Recognition {e} ")
                 
                 if LABEL != "NONE":
                     cv2.putText(frame, f"LABEL: {LABEL}", (10, 250), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
@@ -101,6 +108,9 @@ def getVideoFeed():
             else:
                 # No facial landmarks detected
                 cv2.putText(frame, "Face Not Detected", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                dataDict = {
+                    'data':False
+                }
 
             # Show the frame
             cv2.imshow("window", frame)
@@ -137,6 +147,14 @@ def runStateProcessCounter():
 
     global LABEL,count 
     global terminate,eye_STATUS,currentHeadState,yawnAnalysisLog
+    global dataDict
+
+    dataDict = {
+        'data':True,
+        'eye_STATUS':eye_STATUS,
+        'currentHeadState':currentHeadState,
+        'yawnAnalysisLog':yawnAnalysisLog
+    }
 
     clocktimer = clockTimer() # gets the at call time
 
@@ -144,7 +162,7 @@ def runStateProcessCounter():
 
     while True:
         time.sleep(1)
-        LABEL,count = processData(eye_STATUS,currentHeadState,yawnAnalysisLog,clocktimer)
+        LABEL,count = processData(dataDict,clocktimer)
         
         if terminate:
             break

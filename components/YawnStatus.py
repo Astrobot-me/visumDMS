@@ -12,7 +12,7 @@ RIGHT_MOUTH_CORNER = [291]
 YAWN_RATIO_UPPER_THRESHOLD = 0.6  # Upper limit for detecting a yawn
 YAWN_RATIO_LOWER_THRESHOLD = 0.4  # Lower limit to reset the yawning state
 ALERT_THRESHOLD = 3  # Number of yawns for an alert
-ALERT_INTERVAL = 20  # Time interval in seconds
+ALERT_INTERVAL = 30  # Time interval in seconds
 # ALERT_SOUND_DURATION = 15
 YAWN_TIMEFRAME = 120 #600
 
@@ -28,7 +28,7 @@ class YawnDetection:
         self.ANOMALIES = ['UNREL_YAWN_DATA','LMK_AB']
         self.ANOMALY = self.ANOMALIES[1]
         self.historyQueue = [] # past history queue 
-        self.clocktimer = clockTimer()
+        self.clock = clockTimer()
 
 
     
@@ -114,17 +114,17 @@ class YawnDetection:
         if(size>1):
             for i in range(size-1,-1,-1):
                 yawnItem = yawn_log[i]['timeStamp']
-                event_timeframe = self.clocktimer.getTimerCount(yawnItem)
+                event_timeframe = self.clock.getTimerCount(yawnItem)
                 
                
                 if(event_timeframe <= timePeriod and event_timeframe > 0):
                     # print("event time frame",event_timeframe)
                     yawnCountTF += yawn_log[i]['count']
                 
-            window_timeframe = self.clocktimer.getTimerCount(curr_time)
+            window_timeframe = self.clock.getTimerCount(curr_time)
             # print("window time frame",window_timeframe)
             if(window_timeframe > timePeriod):
-                self.clocktimer.resetTimer()
+                self.clock.resetTimer()
                 yawnCountTF = 0
                 
             
