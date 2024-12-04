@@ -13,14 +13,15 @@ suggested_message_states = [
     'Eyes on the road! Stay alert to ensure your safety',
     'You seem a bit distracted. Refresh yourself before continuing',
     "Driver Look Tired , Please Consider taking Rest",
-    " Look extremely Tired, it is Suggested to Take Rest"
+    " Look extremely Tired, it is Suggested to Take Rest",
+    "You seems Sleepy , Park car and Take a nap"
 ]
 
 critical_message_states = [
-    'Plan your next rest stop. A short break can keep you sharp.',
-    'Driver Look Tired , Please Consider taking Rest',
-    'You’re showing signs of severe tiredness. A quick nap could save lives',
-    'Critical alert! You’re too tired to drive safely. Stop immediately.',
+    'Plan your next rest stop. A short break can keep you safe.',
+    'You Look Tired , Please Consider taking Rest',
+    'You’re showing signs of tiredness. Drive Safetly',
+    'Critical alert! You look too tired to drive safely. Stop immediately.',
 
 ]
 
@@ -160,27 +161,25 @@ def processPassiveData(yawnAnalysis: dict , face_emotion:str , eye_tracking_data
         if labels == ["MODERATE_YAWNING", "MODERATE_YAWNING", "MODERATE_YAWNING"]:
             suggestion_message = suggested_message_states[4]
             return suggestion_message
-        elif labels == ["MODERATE_YAWNING", "SEVERE_YAWNING", "MODERATE_YAWNING"]:
-            suggestion_message = critical_message_states[0]
-            return suggestion_message
-        elif labels == ["NORMAL_YAWNING", "MODERATE_YAWNING", "NORMAL_YAWNING"]:
-            suggestion_message = suggested_message_states[0]
-            return suggestion_message
-        elif labels == ["MODERATE_YAWNING", "NORMAL_YAWNING", "SEVERE_YAWNING"]:
-            suggestion_message = critical_message_states[0]
-            return suggestion_message
-        elif labels == ["SEVERE_YAWNING", "SEVERE_YAWNING", "MODERATE_YAWNING"]:
-            suggestion_message = critical_message_states[2]
-            return suggestion_message
-        elif labels == ["NORMAL_YAWNING", "SEVERE_YAWNING", "SEVERE_YAWNING"]:
-            suggestion_message = critical_message_states[2]
-            return suggestion_message
+        
         elif labels == ["SEVERE_YAWNING", "SEVERE_YAWNING", "SEVERE_YAWNING"]:
             suggestion_message = critical_message_states[3]
             return suggestion_message
-        elif labels == ["NORMAL_YAWNING", "NORMAL_YAWNING", "NORMAL_YAWNING"]:
-            suggestion_message = suggested_message_states[0]
+        
+        elif labels.count("MODERATE_YAWNING") >= 2 and labels.count("SEVERE_YAWNING") >= 1 :
+            suggestion_message = critical_message_states[0]
             return suggestion_message
-
-
+        
+        elif labels.count("SEVERE_YAWNING") >= 2 and labels.count("MODERATE_YAWNING") >= 1 :
+            suggestion_message = critical_message_states[2]
+            return suggestion_message
+       
+        elif "SEVERE_YAWNING" in labels:
+            suggestion_message = critical_message_states[1]
+            return suggestion_message
+        elif "MODERATE_YAWNING" in labels:
+            suggestion_message = suggested_message_states[6]
+            return suggestion_message
+        
+        
     return suggestion_message
