@@ -11,10 +11,8 @@ RIGHT_MOUTH_CORNER = [291]
 # Thresholds
 YAWN_RATIO_UPPER_THRESHOLD = 0.6  # Upper limit for detecting a yawn
 YAWN_RATIO_LOWER_THRESHOLD = 0.4  # Lower limit to reset the yawning state
-ALERT_THRESHOLD = 3  # Number of yawns for an alert
-ALERT_INTERVAL = 30  # Time interval in seconds
-# ALERT_SOUND_DURATION = 15
-YAWN_TIMEFRAME = 120 #600
+ALERT_INTERVAL = 10  # Time interval in seconds
+YAWN_TIMEFRAME = 20 #600
 
 
 
@@ -65,7 +63,7 @@ class YawnDetection:
                 cv2.putText(image, f"Yawn Count: {self.yawn_counter}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
                 try:
-                    yawnCountTF,yawnLabel = self.getYawnsInTimeFrame(self.historyQueue,YAWN_TIMEFRAME)
+                    yawnCountTF,yawnLabel,timePeriodRun = self.getYawnsInTimeFrame(self.historyQueue,YAWN_TIMEFRAME)
                     cv2.putText(image, f"Yawns in TP: {yawnCountTF}", (10, 340), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                     cv2.putText(image, f"Yawn Label: {yawnLabel}", (10, 370), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                 except Exception as e: 
@@ -74,7 +72,8 @@ class YawnDetection:
 
                 yawn_analysis = { 
                     "yawnCountTF":yawnCountTF,
-                    "yawnLabel":yawnLabel
+                    "yawnLabel":yawnLabel,
+                    'timePeriodRun':timePeriodRun
                 }
 
         else:
@@ -109,9 +108,10 @@ class YawnDetection:
         size = len(yawn_log)
         curr_time = time.time()
         yawnCountTF = 0
+        window_timeframe = 0
 
         #requires atleast 2 events 
-        if(size>1):
+        if(size>0):
             for i in range(size-1,-1,-1):
                 yawnItem = yawn_log[i]['timeStamp']
                 event_timeframe = self.clock.getTimerCount(yawnItem)
@@ -130,7 +130,7 @@ class YawnDetection:
             
         yawnLabel = self.getYawnClassfication(yawnCountTF)
         
-        return yawnCountTF,yawnLabel
+        return yawnCountTF,yawnLabel, (window_timeframe == timePeriod )
 
                 
         

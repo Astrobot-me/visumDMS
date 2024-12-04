@@ -43,11 +43,11 @@ class EyeAspectRatio:
 
             #Calculating Ear Aspect Ratio 
             EAR_ASPECT_RATIO_RIGHT = ((RIGHT_length2+RIGHT_length1)/2)/(RIGHT_length3)
-            print(f"Right Eye EAR: {EAR_ASPECT_RATIO_RIGHT}")
+            # print(f"Right Eye EAR: {EAR_ASPECT_RATIO_RIGHT}")
 
             #Calculating Ear Aspect Ratio 
             EAR_ASPECT_RATIO_LEFT = ((LEFT_length2+LEFT_length1)/2)/(LEFT_length3)
-            print(f"Left Eye EAR: {EAR_ASPECT_RATIO_LEFT}")
+            # print(f"Left Eye EAR: {EAR_ASPECT_RATIO_LEFT}")
 
             AVERAGE_EAR = (EAR_ASPECT_RATIO_LEFT+EAR_ASPECT_RATIO_RIGHT)/2
             
@@ -57,16 +57,16 @@ class EyeAspectRatio:
             if(len(self.ear)>5):
                 self.ear.pop(0)
 
-            print(self.ear)
+            # print(self.ear)
             newEAR = sum(self.ear)/len(self.ear)
 
             if newEAR < self.EAR_THRESHOLD:
                 # BLINK_COUNT = BLINK_COUNT + 1
                 OBJECT_STATUS = "EYE_ABSENT"
-                print(f"STATUS: {OBJECT_STATUS}")
+                # print(f"STATUS: {OBJECT_STATUS}")
             else:
                 OBJECT_STATUS = "EYE_PRESENT"
-                print(f"STATUS: {OBJECT_STATUS}")
+                # print(f"STATUS: {OBJECT_STATUS}")
 
             return newEAR,EAR_ASPECT_RATIO_RIGHT,EAR_ASPECT_RATIO_LEFT,OBJECT_STATUS
         else: 

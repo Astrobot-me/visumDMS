@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from collections import deque
+from typing import List, Dict, Tuple
 
 
 class Eyeball:
@@ -10,15 +10,18 @@ class Eyeball:
         self.LEFT_IRIS = [474, 475, 476, 477]
         self.RIGHT_IRIS = [469, 470, 471, 472]
 
-        # To store iris data
-        self.history_length = 50
-        self.left_eye_horizontal = deque(maxlen=self.history_length)
-        self.left_eye_vertical = deque(maxlen=self.history_length)
-        self.right_eye_horizontal = deque(maxlen=self.history_length)
-        self.right_eye_vertical = deque(maxlen=self.history_length)
 
         # Eye ball status
         self.EYEBALL_ORIENTATION = ['UP', 'DOWN', 'LEFT', 'RIGHT']
+
+        #
+        self.horizontal_threshold = 0.3
+        self.vertical_threshold = 0.3
+        self.time_window = 5
+        
+        # Movement tracking
+        self.horizontal_history = []
+        self.vertical_history = []
 
     def detectIrisPos(self, iris_landmarks, eye_landmarks):
         try:
@@ -92,28 +95,28 @@ class Eyeball:
                     right_iris, right_eye
                 )
 
-                # Append to history
-                self.left_eye_horizontal.append(left_horizontal)
-                self.left_eye_vertical.append(left_vertical)
-                self.right_eye_horizontal.append(right_horizontal)
-                self.right_eye_vertical.append(right_vertical)
-
                 # Draw eyes and iris for visualization
                 for point in self.LEFT_EYE + self.RIGHT_EYE + self.LEFT_IRIS + self.RIGHT_IRIS:
                     cv2.circle(image, (int(landmarks[point][0]), int(landmarks[point][1])), 2, (255, 0, 0), -1)  # Blue Circles
+
+                left_attention = self.update_eye_movement(left_horizontal_direction,left_vertical_direction)
+                right_attention = self.update_eye_movement(right_horizontal_direction,right_vertical_direction)
 
                 left_eye_data = {
                     'lh': left_horizontal,
                     'lv': left_vertical,
                     'lhd': left_horizontal_direction,
-                    'lvd': left_vertical_direction
+                    'lvd': left_vertical_direction,
+                    'attention':left_attention
                 }
 
                 right_eye_data = {
                     'rh': right_horizontal,
                     'rv': right_vertical,
                     'rhd': right_horizontal_direction,
-                    'rvd': right_vertical_direction
+                    'rvd': right_vertical_direction,
+                    'attention':right_attention
+
                 }
 
                 return left_eye_data, right_eye_data
@@ -124,7 +127,8 @@ class Eyeball:
                 'lh': "UNREL_DATA",
                 'lv': "UNREL_DATA",
                 'lhd': "UNREL_DATA",
-                'lvd': "UNREL_DATA"
+                'lvd': "UNREL_DATA",
+                'attention':"UNREL_DATA"
             }
             return default_eye_data, default_eye_data
         except Exception as e:
@@ -133,6 +137,90 @@ class Eyeball:
                 'lh': "UNREL_DATA",
                 'lv': "UNREL_DATA",
                 'lhd': "UNREL_DATA",
-                'lvd': "UNREL_DATA"
+                'lvd': "UNREL_DATA",
+                'attention':"UNREL_DATA"
             }
             return default_eye_data, default_eye_data
+        
+    def _normalize_position(self, position: str) -> float:
+        """
+        Convert categorical position to numerical representation
+        
+        Mapping based on cognitive tracking studies:
+        Horizontal: Left (-1), Center (0), Right (1)
+        Vertical: Down (-1), Center (0), Up (1)
+        """
+        position_map = {
+            'left': -1.0,
+            'center': 0.0,
+            'right': 1.0,
+            'down': -1.0,
+            'up': 1.0
+        }
+        return position_map.get(position.lower(), 0.0)
+
+    def update_eye_movement(self, 
+                             horizontal_position: str, 
+                             vertical_position: str) -> Dict[str, bool]:
+        """
+        Analyze eye movement for potential inattention markers
+        
+        Research Insights:
+        - Prolonged deviation from central gaze indicates reduced attention
+        - Rapid, erratic movements suggest cognitive load or distraction
+        """
+        h_pos = self._normalize_position(horizontal_position)
+        v_pos = self._normalize_position(vertical_position)
+        
+        # Update movement histories
+        self.horizontal_history.append(h_pos)
+        self.vertical_history.append(v_pos)
+        
+        # Trim histories to maintain time window
+        self.horizontal_history = self.horizontal_history[-self.time_window:]
+        self.vertical_history = self.vertical_history[-self.time_window:]
+        
+        # Detect inattention markers
+        horizontal_inattention = self._detect_deviation(
+            self.horizontal_history, 
+            self.horizontal_threshold
+        )
+        
+        vertical_inattention = self._detect_deviation(
+            self.vertical_history, 
+            self.vertical_threshold
+        )
+        
+        return {
+            'horizontal_inattention': horizontal_inattention,
+            'vertical_inattention': vertical_inattention,
+            'overall_inattention': horizontal_inattention or vertical_inattention
+        }
+    
+
+    def _detect_deviation(self, 
+                          movement_history: List[float], 
+                          threshold: float) -> bool:
+        """
+        Advanced deviation detection with multiple statistical checks
+        
+        Cognitive Research Indicators:
+        1. Mean deviation from center
+        2. Variance of movements
+        3. Sustained off-center positioning
+        """
+        if len(movement_history) < self.time_window:
+            return False
+        
+        # Calculate mean deviation
+        mean_deviation = np.mean(np.abs(movement_history))
+        movement_variance = np.var(movement_history)
+        
+        # Inattention criteria
+        return (
+            mean_deviation > threshold or 
+            movement_variance > (threshold * 0.5)
+        )
+
+
+

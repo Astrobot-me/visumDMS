@@ -1,6 +1,6 @@
 import cv2
 import time
-from threading import Thread,Event
+from threading import Thread, Event, Lock
 from components.eyeaspectRatio import EyeAspectRatio
 from components.HeadPose import HeadPose
 from components.YawnStatus import YawnDetection
@@ -8,7 +8,7 @@ from components.faceMesh import GetFaceMesh
 from components.eyeballTrack import Eyeball
 from components.projectUtils import UtlilitesFunction
 from components.faceExpression import FaceExpression
-from process import processData
+from process import processData,processPassiveData
 from timerClock import clockTimer
 
 # Initialize global variables
@@ -21,99 +21,97 @@ eye_STATUS = "NONE"
 LABEL = "NONE"
 count = 0
 yawnAnalysisLog = {}
-dataDict = {
-    'data':True
-}
+left_eye = {}
+right_eye = {}
+dataDict = {'data': False}
+suggested_message = "NONE"
 
+# Thread synchronization and locks
+event = Event()
+frame_lock = Lock()
+analysis_dict_lock = Lock()
 
 # Initialize objects
-capture = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+capture = cv2.VideoCapture(0)
 meshDraw = GetFaceMesh(refine_landmarks=True)
 headpose = HeadPose()
 eyeaspectratio = EyeAspectRatio()
 yawnstatus = YawnDetection()
 eyeballtrack = Eyeball()
 faceexpression = FaceExpression()
-event = Event()
+
 
 def getVideoFeed():
-    global currentHeadState, combinedstate,analysis_dict,yawnAnalysisLog 
-    global dataDict # Declare as global
-    global terminate
-    global frame
-    global LABEL
+    global terminate, frame, eye_STATUS, dataDict, LABEL, suggested_message
 
-    global eye_STATUS
-    
-    while True:
-        isframe, frame = capture.read()
-        # rgb_frame = frame
-        event.set()
-        print("---- WATING FOR EMOTION RECOGNITION ----")   
+    while not terminate:
+        isframe, temp_frame = capture.read()
+        if not isframe or temp_frame is None:
+            print("Frame capture failed.")
+            continue
 
-        if analysis_dict == None: 
-            print("GET VIDEOFEED THREAD ON WAIT ")
-            event.wait()
+        with frame_lock:
+            frame = temp_frame
 
-        print("---- EMOTION RECOGNISED ----")   
-        
-        if isframe:
-            # Getting facial landmarks data
-            frame, faces, facial_landmarks = meshDraw.findFaceMesh(frame, draw=True)
+        event.set()  # Notify other threads
 
-            # Processing facial landmarks for different attributes
+        try:
+            # Getting facial landmarks
+            temp_frame, faces, facial_landmarks = meshDraw.findFaceMesh(temp_frame, draw=True)
+
             if facial_landmarks.multi_face_landmarks:
-                try:
-                    # Getting Head Tilt Status
-                    _, currentHeadState, combinedstate = headpose.getHeadTiltStatus(facial_landmarks, frame)
+                # Head Tilt Status
+                _, currentHeadState, combinedstate = headpose.getHeadTiltStatus(facial_landmarks, temp_frame)
 
-                    # Getting Eye Aspect Ratio
-                    meanEAR, right_EAR, left_EAR, eye_STATUS = eyeaspectratio.getEARs(faces, frame)
-                    print(eye_STATUS)
+                # Eye Aspect Ratio
+                meanEAR, right_EAR, left_EAR, eye_STATUS = eyeaspectratio.getEARs(faces, temp_frame)
 
-                    # Getting Yawn Status
-                    _, yawnText,yawnAnalysisLog = yawnstatus.getYawnStatusText(facial_landmarks, frame)
+                # Yawn Status
+                _, yawnText, yawnAnalysisLog = yawnstatus.getYawnStatusText(facial_landmarks, temp_frame)
 
-                    # Getting eyeball tracking
-                    left_eye, right_eye = eyeballtrack.getIrisPos(facial_landmarks, frame)
+                # Eyeball Tracking
+                left_eye, right_eye = eyeballtrack.getIrisPos(facial_landmarks, temp_frame)
 
-                except Exception as e:
-                    # Fallback values for all features
-                    currentHeadState = "Not Detecting"
-                    combinedstate = "Not Detecting"
-                    meanEAR, eye_STATUS = "Not Detecting", "Not Detecting"
-                    yawnText = "Not Detecting"
-                    left_eye, right_eye = "Not Detecting", "Not Detecting"
-                    print(f"Error during detection: {e}")
+                # Update data dictionary
+                dataDict.update({
+                    'data': True,
+                    'eye_STATUS': eye_STATUS,
+                    'currentHeadState': currentHeadState,
+                    'yawnAnalysisLog': yawnAnalysisLog,
+                    'left_eye': left_eye,
+                    'right_eye': right_eye,
+                })
 
-                # Display information on the frame
-                cv2.putText(frame, f"currentHeadState: {currentHeadState}", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                cv2.putText(frame, f"mean EAR: {meanEAR}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                cv2.putText(frame, f"Yawn Text: {yawnText}", (10, 180), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                # Display data on the frame
+                cv2.putText(temp_frame, f"Eye Attention L/R: {left_eye['attention']['overall_inattention']} "
+                                        f"{right_eye['attention']['overall_inattention']}", (10, 90),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                cv2.putText(temp_frame, f"Current Head State: {currentHeadState}", (10, 120),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                cv2.putText(temp_frame, f"Mean EAR: {meanEAR}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                cv2.putText(temp_frame, f"Yawn Text: {yawnText}", (10, 180), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-                if analysis_dict is not None:
-                    # print("Emodict", analysis_dict)
-                    try:
-                        cv2.putText(frame, f"Recog emotion: {analysis_dict['dominantemotion']}", (10, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                    except Exception as e:
-                        print(f"Error Occured in Emotion Recognition {e} ")
-                
+                if analysis_dict:
+                    with analysis_dict_lock:
+                        cv2.putText(temp_frame, f"Recognized Emotion: {analysis_dict.get('dominantemotion', 'NONE')}", 
+                                    (10, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+
                 if LABEL != "NONE":
-                    cv2.putText(frame, f"LABEL: {LABEL}", (10, 250), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
-                    cv2.putText(frame, f"COUNT: {count}", (10, 280), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
-                    cv2.putText(frame, f"EYE: {eye_STATUS}", (10, 320), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
-
- 
-
+                    cv2.putText(temp_frame, f"LABEL: {LABEL}", (10, 250), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+                    cv2.putText(temp_frame, f"COUNT: {count}", (10, 280), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+                    cv2.putText(temp_frame, f"EYE: {eye_STATUS}", (10, 320), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+                    cv2.putText(temp_frame, f"Message: {suggested_message}", (10, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.7,
+                                (255, 0, 0), 2)
             else:
                 # No facial landmarks detected
-                cv2.putText(frame, "Face Not Detected", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                dataDict = {
-                    'data':False
-                }
+                cv2.putText(temp_frame, "Face Not Detected", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                dataDict['data'] = False
 
             # Show the frame
-            cv2.imshow("window", frame)
+            cv2.imshow("Driver Monitoring System", temp_frame)
+
+        except Exception as e:
+            print(f"Error during video feed processing: {e}")
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             terminate = True
@@ -123,46 +121,53 @@ def getVideoFeed():
     cv2.destroyAllWindows()
 
 
-
-
 def getRealEmoText():
-    global terminate,frame,analysis_dict
-    
-    print("---- WAITING FOR VIDEO FRAME ----")
-    event.wait()
-    
-    analysis_dict = faceexpression.getFaceExpression(frame)
-    print("---- VIDEO RESUMED && ANLYSIS DICT SET ----")
-    event.set() 
+    global terminate, frame, analysis_dict
 
-    while True: 
-        
-        analysis_dict = faceexpression.getFaceExpression(frame)
+    while not terminate:
+        event.wait()
+        with frame_lock:
+            temp_frame = frame.copy() if frame is not None else None
+
+        if temp_frame is not None:
+            try:
+                with analysis_dict_lock:
+                    analysis_dict = faceexpression.getFaceExpression(temp_frame)
+            except Exception as e:
+                print(f"Error in face expression detection: {e}")
+
         time.sleep(2)
-        if terminate:
-            break 
 
-        
+
 def runStateProcessCounter():
+    global LABEL, count, suggested_message, dataDict
 
-    global LABEL,count 
-    global terminate,eye_STATUS,currentHeadState,yawnAnalysisLog
-    global dataDict
-
-    dataDict = {
-        'data':True,
-        'eye_STATUS':eye_STATUS,
-        'currentHeadState':currentHeadState,
-        'yawnAnalysisLog':yawnAnalysisLog
-    }
-
-    clocktimer = clockTimer() # gets the at call time
-
+    clocktimer = clockTimer()  # Timer object
     clocktimer.resetTimer()
 
-    while True:
+    while not terminate:
         time.sleep(1)
-        LABEL,count = processData(dataDict,clocktimer)
-        
-        if terminate:
-            break
+        try:
+            LABEL, count = processData(dataDict, clocktimer)
+            print(" Yawn Dict :", dataDict.get('yawnAnalysisLog'))
+            suggested_message = processPassiveData(dataDict.get('yawnAnalysisLog'),"NONE","NONE")
+            print("Suggested Message",suggested_message)
+        except Exception as e:
+            print(f"Error in state process counter: {e}")
+
+
+# if __name__ == "__main__":
+#     # Start threads
+#     video_thread = Thread(target=getVideoFeed, daemon=True)
+#     emotion_thread = Thread(target=getRealEmoText, daemon=True)
+#     state_thread = Thread(target=runStateProcessCounter, daemon=True)
+
+#     video_thread.start()
+#     emotion_thread.start() 
+#     state_thread.start()
+
+#     video_thread.join()
+#     emotion_thread.join()
+#     state_thread.join()
+
+#     print("Program terminated.")

@@ -92,7 +92,7 @@ class HeadPose:
         #     cv2.putText(image,CurrentStateText2, (200,300),fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=2,color=(0,0,255),thickness=2)
 
 
-        print(f"Pitch :{pitch}, Yaw: {yaw}, Roll:{roll}")
+        # print(f"Pitch :{pitch}, Yaw: {yaw}, Roll:{roll}")
         axis_length = 50
         axis = numpy.float32([
         [axis_length, 0, 0],  # X-axis (red)
