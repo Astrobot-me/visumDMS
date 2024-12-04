@@ -7,8 +7,11 @@ mixer.init()
 
 SeatbeltWarn = mixer.Sound("./resources/audio/tesla_seatbelt_warning.mp3")
 Seatbelt = mixer.Sound("./resources/audio/tesla_seatbelt.mp3")
-MasterCaution = mixer.Sound("./resources/audio/alert.mp3")
+
+SlaveCaution = mixer.Sound("./resources/audio/precaution.mp3")
+MasterCaution = mixer.Sound("./resources/audio/caution.mp3")
 HazardTone = mixer.Sound("./resources/audio/alert.mp3")
+StateChange = mixer.Sound("./resources/audio/tesla_seatbelt.mp3")
 
 
 channel1 = mixer.Channel(0)
@@ -19,20 +22,40 @@ channel2.set_volume(1.0)
 
 channel3 = mixer.Channel(2)
 
-def playAlarm(state: int,seatbelt = "SEATBELT"):
-    if(state == 0):
-        pass
-        # channel1.play(MasterCaution)
-    elif(state == 1):
-        channel1.play(MasterCaution)
-    elif(state == 2):
-        channel3.play(HazardTone)
+'''
+possible states 
+1: safe 
+2: pre-caution 
+3: caution 
+4: hazard 
 
-    # if(seatbelt == "SEATBELT"):
-    #     playSeatbeltWarn(True)
-    # else:
-    #     pass
 
+'''
+
+def playAlarm(state: str = "SAFE",seatbelt = "SEATBELT",terminate: bool= False):
+
+    last_state = "SAFE"
+
+    while True:
+        if not terminate:
+            if(last_state != state):
+                channel2.play(StateChange)
+                last_state = state
+
+            if(state == "SAFE"): 
+                # state : 0
+                pass
+                # channel1.play(MasterCaution)
+            elif(state == "PRECAUTION"):
+                channel1.play(SlaveCaution)
+            elif(state == "CAUTION"):
+                channel1.play(MasterCaution)
+            elif(state == "HAZARD"):
+                channel1.play(HazardTone)
+
+        
+
+    
 
 def playSeatbeltWarn(play:True):
 

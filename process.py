@@ -4,7 +4,7 @@ from collections import deque
 # clocktimer = clockTimer()
 
 
-STATES = ["CAUTION","SAFE","HAZARD","DRIVER NOT FOUND"]
+STATES = ["CAUTION","SAFE","HAZARD","DRIVER NOT FOUND","PRECAUTION"]
 # count = 0
 headpose_caution_states = ['LOOKING_DOWN','FACE_DOWN','FACE_DOWN','BOTTOM_LEFT','BOTTOM_RIGHT']
 suggested_message_states = [
@@ -41,7 +41,7 @@ def processData(dataDict: dict, counterOBJ,  vehicle_speed :int = 20,alcoholPara
 
     #Toggling if we have consider the hardware info or not
     vehicle_speed = vehicleSpeedParamToggler(True,vehicle_speed)
-    alcoholParam = alcoholParamToggler(True,alcoholParam)
+    alcoholParam = alcoholParamToggler(False,alcoholParam)
     # print("Data dict--- ",dataDict)
 
     if dataDict['data']:
@@ -65,34 +65,65 @@ def processData(dataDict: dict, counterOBJ,  vehicle_speed :int = 20,alcoholPara
 
             elif(eye_status == "EYE_ABSENT" ):
                 count = counterOBJ.getTimerCount(time.time())
-                if count > 1 and count <= 4: 
-                    message_state = STATES[0]
-                elif count > 4:
-                    message_state = STATES[2]
 
-                # suggested_message = processPassiveData(yawnAnalysisLog,"NOnE","NONE")
+                if vehicle_speed > 5:
+                    if count > 1 and count <= 4: 
+                        message_state = STATES[0]
+                    elif count > 4:
+                        message_state = STATES[2]
+
+                elif (vehicle_speed > 1 and vehicle_speed <= 5):
+                    if count > 15 and count <= 25: 
+                        message_state = STATES[0]
+                    elif count > 25:
+                        message_state = STATES[2]
+                elif vehicle_speed == 0:
+                    count = 0
+               
                 return message_state,count
 
             elif( eye_status == "EYE_ABSENT" and head_pose in headpose_caution_states ):
                 count = counterOBJ.getTimerCount(time.time())
 
-                if count > 1 and count <= 6 : 
-                    message_state = STATES[0]
-                elif count > 6:
-                    message_state = STATES[2]
 
-                # suggested_message = processPassiveData(yawnAnalysisLog,"NOnE","NONE")
+                if vehicle_speed > 5:
+                    if count > 2 and count <= 6 : 
+                        message_state = STATES[4]
+                    elif count > 6 and count <= 10:
+                        message_state = STATES[0]
+                    elif count > 10:
+                        message_state = STATES[2]
+
+                elif (vehicle_speed > 1 and vehicle_speed <= 5):
+                    if count > 10 and count <= 20 : 
+                        message_state = STATES[4]
+                    elif count > 30 and count <= 40:
+                        message_state = STATES[0]
+                    elif count > 40:
+                        message_state = STATES[2]
+                elif vehicle_speed == 0:
+                    count = 0
+
                 return message_state,count
 
             elif(head_pose in headpose_caution_states):
                 count = counterOBJ.getTimerCount(time.time())
 
-                if count > 1 and count <= 8: 
-                    message_state = STATES[0]
-                elif count > 8:
-                    message_state = STATES[2]
                 
-                # suggested_message = processPassiveData(yawnAnalysisLog,"NOnE","NONE")
+                if vehicle_speed > 5:
+                    if count > 1 and count <= 8: 
+                        message_state = STATES[0]
+                    elif count > 8:
+                        message_state = STATES[2]
+
+                elif (vehicle_speed > 1 and vehicle_speed <= 5):
+                    if count > 30 and count <= 60: 
+                        message_state = STATES[0]
+                    elif count > 60:
+                        message_state = STATES[2]
+                elif vehicle_speed == 0:
+                    count = 0
+
                 return message_state,count
         else:
             message_state = STATES[2]
@@ -108,6 +139,8 @@ def processData(dataDict: dict, counterOBJ,  vehicle_speed :int = 20,alcoholPara
         elif (vehicle_speed > 1 and vehicle_speed <= 5):
             if count > 60 : 
                 message_state = STATES[2]
+        elif vehicle_speed == 0:
+                    count = 0
         
         
         return message_state,count
@@ -135,6 +168,8 @@ def processPassiveData(yawnAnalysis: dict , face_emotion:str , eye_tracking_data
     global yawn_status_history
 
     suggestion_message = suggested_message_states[0]
+
+    alcoholParam = alcoholParamToggler(False,alcoholParam)
 
     if alcoholParam : 
         suggestion_message = hardware_info_states[0]
