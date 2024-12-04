@@ -96,16 +96,19 @@ def getVideoFeed():
                         cv2.putText(temp_frame, f"Recognized Emotion: {analysis_dict.get('dominantemotion', 'NONE')}", 
                                     (10, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-                if LABEL != "NONE":
+                
+            else:
+                # No facial landmarks detected
+                cv2.putText(temp_frame, "Face Not Detected", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                dataDict['data'] = False
+            
+
+            if LABEL != "NONE":
                     cv2.putText(temp_frame, f"LABEL: {LABEL}", (10, 250), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
                     cv2.putText(temp_frame, f"COUNT: {count}", (10, 280), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
                     cv2.putText(temp_frame, f"EYE: {eye_STATUS}", (10, 320), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
                     cv2.putText(temp_frame, f"Message: {suggested_message}", (10, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.7,
                                 (255, 0, 0), 2)
-            else:
-                # No facial landmarks detected
-                cv2.putText(temp_frame, "Face Not Detected", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                dataDict['data'] = False
 
             # Show the frame
             cv2.imshow("Driver Monitoring System", temp_frame)
@@ -148,9 +151,9 @@ def runStateProcessCounter():
     while not terminate:
         time.sleep(1)
         try:
-            LABEL, count = processData(dataDict, clocktimer)
+            LABEL, count = processData(dataDict, clocktimer,20,True)
             print(" Yawn Dict :", dataDict.get('yawnAnalysisLog'))
-            suggested_message = processPassiveData(dataDict.get('yawnAnalysisLog'),"NONE","NONE")
+            suggested_message = processPassiveData(dataDict.get('yawnAnalysisLog'),"NONE","NONE",True)
             print("Suggested Message",suggested_message)
         except Exception as e:
             print(f"Error in state process counter: {e}")

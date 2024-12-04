@@ -22,17 +22,26 @@ critical_message_states = [
     'You Look Tired , Please Consider taking Rest',
     'You’re showing signs of tiredness. Drive Safetly',
     'Critical alert! You look too tired to drive safely. Stop immediately.',
+    
 
+]
+
+hardware_info_states = [
+    'You Have High Alcohol Content , Driving is Not permitted'
 ]
 
 
 yawn_status_history = deque(maxlen=50)
 
 
-def processData(dataDict: dict, counterOBJ,  vehicle_speed :int = 20 ):
+def processData(dataDict: dict, counterOBJ,  vehicle_speed :int = 20,alcoholParam:bool=False ):
 
     message_state = STATES[1]
-    
+
+
+    #Toggling if we have consider the hardware info or not
+    vehicle_speed = vehicleSpeedParamToggler(True,vehicle_speed)
+    alcoholParam = alcoholParamToggler(True,alcoholParam)
     # print("Data dict--- ",dataDict)
 
     if dataDict['data']:
@@ -45,57 +54,62 @@ def processData(dataDict: dict, counterOBJ,  vehicle_speed :int = 20 ):
 
 
 
-        if eye_status == "EYE_PRESENT" and  head_pose not in headpose_caution_states:
-            count = 0
-            counterOBJ.resetTimer()
-            message_state = STATES[1]
-            # suggested_message = processPassiveData(yawnAnalysisLog,"NOnE","NONE")
-            return message_state,count
+        if not alcoholParam:
 
-        elif(eye_status == "EYE_ABSENT" ):
-            count = counterOBJ.getTimerCount(time.time())
-            if count > 1 and count <= 4: 
-                message_state = STATES[0]
-            elif count > 4:
-                message_state = STATES[2]
+            if eye_status == "EYE_PRESENT" and  head_pose not in headpose_caution_states:
+                count = 0
+                counterOBJ.resetTimer()
+                message_state = STATES[1]
+                # suggested_message = processPassiveData(yawnAnalysisLog,"NOnE","NONE")
+                return message_state,count
 
-            # suggested_message = processPassiveData(yawnAnalysisLog,"NOnE","NONE")
-            return message_state,count
+            elif(eye_status == "EYE_ABSENT" ):
+                count = counterOBJ.getTimerCount(time.time())
+                if count > 1 and count <= 4: 
+                    message_state = STATES[0]
+                elif count > 4:
+                    message_state = STATES[2]
 
-        elif( eye_status == "EYE_ABSENT" and head_pose in headpose_caution_states ):
-            count = counterOBJ.getTimerCount(time.time())
+                # suggested_message = processPassiveData(yawnAnalysisLog,"NOnE","NONE")
+                return message_state,count
 
-            if count > 1 and count <= 6 : 
-                message_state = STATES[0]
-            elif count > 6:
-                message_state = STATES[2]
+            elif( eye_status == "EYE_ABSENT" and head_pose in headpose_caution_states ):
+                count = counterOBJ.getTimerCount(time.time())
 
-            # suggested_message = processPassiveData(yawnAnalysisLog,"NOnE","NONE")
-            return message_state,count
+                if count > 1 and count <= 6 : 
+                    message_state = STATES[0]
+                elif count > 6:
+                    message_state = STATES[2]
 
-        elif(head_pose in headpose_caution_states):
-            count = counterOBJ.getTimerCount(time.time())
+                # suggested_message = processPassiveData(yawnAnalysisLog,"NOnE","NONE")
+                return message_state,count
 
-            if count > 1 and count <= 8: 
-                message_state = STATES[0]
-            elif count > 8:
-                message_state = STATES[2]
-            
-            # suggested_message = processPassiveData(yawnAnalysisLog,"NOnE","NONE")
-            return message_state,count
+            elif(head_pose in headpose_caution_states):
+                count = counterOBJ.getTimerCount(time.time())
+
+                if count > 1 and count <= 8: 
+                    message_state = STATES[0]
+                elif count > 8:
+                    message_state = STATES[2]
+                
+                # suggested_message = processPassiveData(yawnAnalysisLog,"NOnE","NONE")
+                return message_state,count
+        else:
+            message_state = STATES[2]
+            return message_state,-1
     else:
         count = counterOBJ.getTimerCount(time.time())
 
         if vehicle_speed > 5:
             if count > 2 and count <= 30: 
                 message_state = STATES[3]
-            elif count > 20:
+            elif count > 30:
                 message_state = STATES[2]
         elif (vehicle_speed > 1 and vehicle_speed <= 5):
             if count > 60 : 
                 message_state = STATES[2]
         
-        # suggested_message = processPassiveData(yawnAnalysisLog,"NOnE","NONE")
+        
         return message_state,count
         
     # if( left_eye['lhd'] == "DOWN" and rigth_eye == 'DOWN' ):
@@ -109,23 +123,27 @@ def processData(dataDict: dict, counterOBJ,  vehicle_speed :int = 20 ):
 
     #         return message_state,count
 
-# yawn_analysis = { 
-#                     "yawnCountTF":yawnCountTF,
-#                     "yawnLabel":yawnLabel,
-#                     'timePeriodRun':timePeriodRun
-#                 }
 
 
-def processPassiveData(yawnAnalysis: dict , face_emotion:str , eye_tracking_data : str):
+def processPassiveData(yawnAnalysis: dict , face_emotion:str , eye_tracking_data : str,alcoholParam:bool=False):
+    # yawn_analysis = { 
+    #                     "yawnCountTF":yawnCountTF,
+    #                     "yawnLabel":yawnLabel,
+    #                     'timePeriodRun':timePeriodRun
+    #                 }
 
     global yawn_status_history
 
     suggestion_message = suggested_message_states[0]
 
-    if(yawnAnalysis['yawnLabel'] == "SEVERE_YAWNING"):
+    if alcoholParam : 
+        suggestion_message = hardware_info_states[0]
+        return suggestion_message
 
-        suggestion_message = suggested_message_states[2]
-        return 
+    # if(yawnAnalysis['yawnLabel'] == "SEVERE_YAWNING"):
+
+    #     suggestion_message = suggested_message_states[2]
+    #     return suggestion_message
 
 
     if(len(yawn_status_history) == 0 ):
@@ -183,3 +201,21 @@ def processPassiveData(yawnAnalysis: dict , face_emotion:str , eye_tracking_data
         
         
     return suggestion_message
+
+
+def vehicleSpeedParamToggler(flag : bool = False,speed: int= None):
+    
+    if(flag):
+        return speed
+    else:
+        speed = 6
+        return speed
+
+def alcoholParamToggler(flag : bool = False,mode: bool= False):
+    if flag:
+        return mode
+    else:
+        mode = False
+        return mode
+
+

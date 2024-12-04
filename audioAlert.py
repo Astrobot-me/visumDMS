@@ -10,6 +10,7 @@ Seatbelt = mixer.Sound("./resources/audio/tesla_seatbelt.mp3")
 MasterCaution = mixer.Sound("./resources/audio/alert.mp3")
 HazardTone = mixer.Sound("./resources/audio/alert.mp3")
 
+
 channel1 = mixer.Channel(0)
 channel1.set_volume(1.0)
 
@@ -27,10 +28,10 @@ def playAlarm(state: int,seatbelt = "SEATBELT"):
     elif(state == 2):
         channel3.play(HazardTone)
 
-    if(seatbelt == "SEATBELT"):
-        playSeatbeltWarn(True)
-    else:
-        pass
+    # if(seatbelt == "SEATBELT"):
+    #     playSeatbeltWarn(True)
+    # else:
+    #     pass
 
 
 def playSeatbeltWarn(play:True):
