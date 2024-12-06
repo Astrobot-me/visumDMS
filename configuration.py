@@ -10,6 +10,7 @@ from components.projectUtils import UtlilitesFunction
 from components.faceExpression import FaceExpression
 from process import processData,processPassiveData
 from timerClock import clockTimer
+from audioAlert import playAlarm
 
 # Initialize global variables
 currentHeadState = "NONE"
@@ -152,6 +153,7 @@ def runStateProcessCounter():
         time.sleep(1)
         try:
             LABEL, count = processData(dataDict, clocktimer,20,True)
+            playAlarm(LABEL)
             print(" Yawn Dict :", dataDict.get('yawnAnalysisLog'))
             suggested_message = processPassiveData(dataDict.get('yawnAnalysisLog'),"NONE","NONE",True)
             print("Suggested Message",suggested_message)

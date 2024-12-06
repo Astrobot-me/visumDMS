@@ -1,5 +1,5 @@
 from pygame import mixer 
-import time
+import time,random,cv2 
 
 # Initialize the mixer
 mixer.init()
@@ -32,26 +32,40 @@ possible states
 
 '''
 
-def playAlarm(state: str = "SAFE",seatbelt = "SEATBELT",terminate: bool= False):
-
+def playAlarm(state: str = "SAFE", seatbelt: str = "SEATBELT", terminate: bool = False):
     last_state = "SAFE"
 
-    while True:
-        if not terminate:
-            if(last_state != state):
-                channel2.play(StateChange)
-                last_state = state
+    
+    # Handle state change
+    if last_state != state:
+        if not channel2.get_busy(): 
+            channel1.stop() 
+            channel2.play(StateChange)
+        last_state = state
 
-            if(state == "SAFE"): 
-                # state : 0
-                pass
-                # channel1.play(MasterCaution)
-            elif(state == "PRECAUTION"):
-                channel1.play(SlaveCaution)
-            elif(state == "CAUTION"):
-                channel1.play(MasterCaution)
-            elif(state == "HAZARD"):
-                channel1.play(HazardTone)
+        # Handle different states
+    if state == "SAFE" :
+        if channel1.get_busy():
+            channel1.stop()  
+
+    elif state == "PRECAUTION" and not channel1.get_busy():
+
+        channel1.play(SlaveCaution,loops=100) 
+            
+    elif state == "CAUTION" and not channel1.get_busy():
+            
+        channel1.play(MasterCaution,loops=100) 
+            
+    elif state == "HAZARD" and not channel1.get_busy():
+
+        channel1.play(HazardTone,loops=100) 
+
+            
+    # Simulate a loop delay
+    time.sleep(0.1)
+
+# Example Usage
+
 
         
 
@@ -73,3 +87,23 @@ def playSeatbeltWarn(play:True):
 
 
     
+
+# while True:
+#     states = ["CAUTION","PRECAUTION","HAZARD"]
+#     # terminate = False
+
+#     choice = random.choice(states)
+
+#     print("Choosen State",choice)
+
+#     playAlarm(choice)
+#     # time.sleep(4)
+
+#     if cv2.waitKey(1) & 0xFF == ord('q'):
+#         # playAlarm("SAFE","NONE")
+#         break
+
+
+
+
+

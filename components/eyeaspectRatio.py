@@ -13,7 +13,7 @@ class EyeAspectRatio:
         self.p1_LEFT,self.p2_LEFT,self.p3_LEFT,self.p4_LEFT,self.p5_LEFT,self.p6_LEFT = [263,362,373,387,380,385]
         self.N1,self.N2 = [219,439]
         self.ear = [0.262,0.256,0.255,0.254,0.262]
-        self.EAR_THRESHOLD = 0.270
+        self.EAR_THRESHOLD = 0.250
         self.ANOMALIES = ['UNREL_EAR','LMK_AB']
         self.ANOMALY = self.ANOMALIES[0]
         self.utility = UtlilitesFunction()

@@ -51,7 +51,7 @@ def processData(dataDict: dict, counterOBJ,  vehicle_speed :int = 20,alcoholPara
         yawnAnalysisLog = dataDict['yawnAnalysisLog']
         left_eye = dataDict['left_eye']
         rigth_eye = dataDict['right_eye']
-
+        attention_state = "ATTENTIVE"
 
 
         if not alcoholParam:
@@ -84,7 +84,6 @@ def processData(dataDict: dict, counterOBJ,  vehicle_speed :int = 20,alcoholPara
 
             elif( eye_status == "EYE_ABSENT" and head_pose in headpose_caution_states ):
                 count = counterOBJ.getTimerCount(time.time())
-
 
                 if vehicle_speed > 5:
                     if count > 2 and count <= 6 : 
@@ -125,6 +124,53 @@ def processData(dataDict: dict, counterOBJ,  vehicle_speed :int = 20,alcoholPara
                     count = 0
 
                 return message_state,count
+            
+            # In attetniveness code logic goes here 
+            elif(eye_status == "EYE_ABSENT" or attention_state == "INATTENTIVE"):
+                count = counterOBJ.getTimerCount(time.time())
+
+                
+                if vehicle_speed > 5:
+                    if count > 1 and count <= 4: 
+                        message_state = STATES[0]
+                    elif count > 4:
+                        message_state = STATES[2]
+
+                elif (vehicle_speed > 1 and vehicle_speed <= 5):
+                    if count > 15 and count <= 25: 
+                        message_state = STATES[0]
+                    elif count > 25:
+                        message_state = STATES[2]
+                elif vehicle_speed == 0:
+                    count = 0
+                return message_state,count
+            elif(eye_status == "EYE_PRESENT" and attention_state == "INATTENTIVE"):
+                count = counterOBJ.getTimerCount(time.time())
+
+                
+                if vehicle_speed > 5:
+                    pass
+
+                elif (vehicle_speed > 1 and vehicle_speed <= 5):
+                    pass
+                elif vehicle_speed == 0:
+                    count = 0
+
+                return message_state,count
+            elif(attention_state == "INATTENTIVE"):
+                count = counterOBJ.getTimerCount(time.time())
+
+                
+                if vehicle_speed > 5:
+                    pass
+
+                elif (vehicle_speed > 1 and vehicle_speed <= 5):
+                    pass
+                elif vehicle_speed == 0:
+                    count = 0
+
+                return message_state,count
+
         else:
             message_state = STATES[2]
             return message_state,-1
