@@ -62,26 +62,7 @@ def processData(dataDict: dict, counterOBJ,  vehicle_speed :int = 20,alcoholPara
                 message_state = STATES[1]
                 # suggested_message = processPassiveData(yawnAnalysisLog,"NOnE","NONE")
                 return message_state,count
-
-            elif(eye_status == "EYE_ABSENT" ):
-                count = counterOBJ.getTimerCount(time.time())
-
-                if vehicle_speed > 5:
-                    if count > 1 and count <= 4: 
-                        message_state = STATES[0]
-                    elif count > 4:
-                        message_state = STATES[2]
-
-                elif (vehicle_speed > 1 and vehicle_speed <= 5):
-                    if count > 15 and count <= 25: 
-                        message_state = STATES[0]
-                    elif count > 25:
-                        message_state = STATES[2]
-                elif vehicle_speed == 0:
-                    count = 0
-               
-                return message_state,count
-
+            
             elif( eye_status == "EYE_ABSENT" and head_pose in headpose_caution_states ):
                 count = counterOBJ.getTimerCount(time.time())
 
@@ -105,6 +86,27 @@ def processData(dataDict: dict, counterOBJ,  vehicle_speed :int = 20,alcoholPara
 
                 return message_state,count
 
+
+            elif(eye_status == "EYE_ABSENT" ):
+                count = counterOBJ.getTimerCount(time.time())
+
+                if vehicle_speed > 5:
+                    if count > 1 and count <= 4: 
+                        message_state = STATES[0]
+                    elif count > 4:
+                        message_state = STATES[2]
+
+                elif (vehicle_speed > 1 and vehicle_speed <= 5):
+                    if count > 15 and count <= 25: 
+                        message_state = STATES[0]
+                    elif count > 25:
+                        message_state = STATES[2]
+                elif vehicle_speed == 0:
+                    count = 0
+               
+                return message_state,count
+
+            
             elif(head_pose in headpose_caution_states):
                 count = counterOBJ.getTimerCount(time.time())
 

@@ -12,6 +12,7 @@ SlaveCaution = mixer.Sound("./resources/audio/precaution.mp3")
 MasterCaution = mixer.Sound("./resources/audio/caution.mp3")
 HazardTone = mixer.Sound("./resources/audio/alert.mp3")
 StateChange = mixer.Sound("./resources/audio/tesla_seatbelt.mp3")
+# dnfState = mixer.Sound("./resources/audio/airplanecockpit.mp3")
 
 
 channel1 = mixer.Channel(0)
@@ -31,11 +32,11 @@ possible states
 
 
 '''
+last_state = "SAFE"
 
 def playAlarm(state: str = "SAFE", seatbelt: str = "SEATBELT", terminate: bool = False):
-    last_state = "SAFE"
 
-    
+    global last_state
     # Handle state change
     if last_state != state:
         if not channel2.get_busy(): 
@@ -56,9 +57,12 @@ def playAlarm(state: str = "SAFE", seatbelt: str = "SEATBELT", terminate: bool =
             
         channel1.play(MasterCaution,loops=100) 
             
-    elif state == "HAZARD" and not channel1.get_busy():
+    elif state == "HAZARD"  and not channel1.get_busy():
 
         channel1.play(HazardTone,loops=100) 
+    elif state == "DRIVER NOT FOUND"  and not channel1.get_busy():
+
+        channel1.play(SlaveCaution,loops=100) 
 
             
     # Simulate a loop delay

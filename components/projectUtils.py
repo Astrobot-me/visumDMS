@@ -7,6 +7,7 @@ class UtlilitesFunction:
 
     def findDistance(self,point1, point2, img=None):
 
+
         x1, y1 = point1
         x2, y2 = point2
         cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
@@ -20,3 +21,14 @@ class UtlilitesFunction:
             return length,info, img
         else:
             return length, info
+        
+    def rescaleFrame(self,image,scale=0.75):
+        '''
+        Work for Image,Video & Live Video Feed
+        '''
+        width = int(image.shape[1]*scale)
+        height = int(image.shape[0]*scale)
+        dimensions = (width,height)
+
+        scaledImage = cv2.resize(image,dimensions,interpolation=cv2.INTER_AREA)
+        return scaledImage

@@ -130,9 +130,9 @@ class HeadPose:
 
         
         # Add the text on the image
-        cv2.putText(image, "x: " + str(numpy.round(pitch, 2)), (500, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-        cv2.putText(image, "y: " + str(numpy.round(yaw, 2)), (500, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-        cv2.putText(image, "z: " + str(numpy.round(roll, 2)), (500, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(image, "x: " + str(numpy.round(pitch, 2)), (10, 440), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(image, "y: " + str(numpy.round(yaw, 2)), (10, 470), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(image, "z: " + str(numpy.round(roll, 2)), (10, 500), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
         return image,currentstate,combinedstate
 

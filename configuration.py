@@ -33,13 +33,14 @@ frame_lock = Lock()
 analysis_dict_lock = Lock()
 
 # Initialize objects
-capture = cv2.VideoCapture(0)
+capture = cv2.VideoCapture(r"A:\Driver data -20241205T185304Z-001\Driver data\VID20241205142351.mp4")
 meshDraw = GetFaceMesh(refine_landmarks=True)
 headpose = HeadPose()
 eyeaspectratio = EyeAspectRatio()
 yawnstatus = YawnDetection()
 eyeballtrack = Eyeball()
 faceexpression = FaceExpression()
+util = UtlilitesFunction()
 
 
 def getVideoFeed():
@@ -47,6 +48,7 @@ def getVideoFeed():
 
     while not terminate:
         isframe, temp_frame = capture.read()
+        temp_frame = util.rescaleFrame(temp_frame,0.40)
         if not isframe or temp_frame is None:
             print("Frame capture failed.")
             continue
@@ -58,7 +60,7 @@ def getVideoFeed():
 
         try:
             # Getting facial landmarks
-            temp_frame, faces, facial_landmarks = meshDraw.findFaceMesh(temp_frame, draw=True)
+            temp_frame, faces, facial_landmarks = meshDraw.findFaceMesh(temp_frame, draw=False)
 
             if facial_landmarks.multi_face_landmarks:
                 # Head Tilt Status
