@@ -7,10 +7,16 @@ from components.YawnStatus import YawnDetection
 from components.faceMesh import GetFaceMesh
 from components.eyeballTrack import Eyeball
 from components.projectUtils import UtlilitesFunction
-from components.faceExpression import FaceExpression
+import locationServer
+# from components.faceExpression import FaceExpression
 from process import processData,processPassiveData
 from timerClock import clockTimer
 from audioAlert import playAlarm
+from dbCon import firestore_instance
+import CONSTANTS
+import datetime
+
+
 
 # Initialize global variables
 currentHeadState = "NONE"
@@ -20,12 +26,14 @@ terminate = False
 frame = None
 eye_STATUS = "NONE"
 LABEL = "NONE"
+last_label = None
 count = 0
 yawnAnalysisLog = {}
 left_eye = {}
 right_eye = {}
 dataDict = {'data': False}
 suggested_message = "NONE"
+Background = None
 
 # Thread synchronization and locks
 event = Event()
@@ -33,22 +41,32 @@ frame_lock = Lock()
 analysis_dict_lock = Lock()
 
 # Initialize objects
-capture = cv2.VideoCapture(r"A:\Driver data -20241205T185304Z-001\Driver data\VID20241205142351.mp4")
+capture = cv2.VideoCapture(0)
 meshDraw = GetFaceMesh(refine_landmarks=True)
 headpose = HeadPose()
 eyeaspectratio = EyeAspectRatio()
 yawnstatus = YawnDetection()
 eyeballtrack = Eyeball()
-faceexpression = FaceExpression()
+# faceexpression = FaceExpression()
 util = UtlilitesFunction()
+
+
 
 
 def getVideoFeed():
     global terminate, frame, eye_STATUS, dataDict, LABEL, suggested_message
+    global Background
+
+    print(f"[VIDEOFEED/T1] : Starting Videofeed")
 
     while not terminate:
+
+
+        Background = cv2.imread("./resources/skeleton2.png")
+
+
         isframe, temp_frame = capture.read()
-        temp_frame = util.rescaleFrame(temp_frame,0.40)
+        temp_frame = util.rescaleFrame(temp_frame,0.9)
         if not isframe or temp_frame is None:
             print("Frame capture failed.")
             continue
@@ -56,7 +74,12 @@ def getVideoFeed():
         with frame_lock:
             frame = temp_frame
 
-        event.set()  # Notify other threads
+        event.set()
+          # Notify other threads
+
+        # print(Background.shape[0], Background.shape[1])
+        # Background = util.rescaleFrame(Background,0.9)
+        Background[100:100+temp_frame.shape[0], 580:580+temp_frame.shape[1]] = temp_frame
 
         try:
             # Getting facial landmarks
@@ -78,6 +101,7 @@ def getVideoFeed():
                 # Update data dictionary
                 dataDict.update({
                     'data': True,
+                    'meanEAR':meanEAR,
                     'eye_STATUS': eye_STATUS,
                     'currentHeadState': currentHeadState,
                     'yawnAnalysisLog': yawnAnalysisLog,
@@ -86,13 +110,33 @@ def getVideoFeed():
                 })
 
                 # Display data on the frame
-                cv2.putText(temp_frame, f"Eye Attention L/R: {left_eye['attention']['overall_inattention']} "
-                                        f"{right_eye['attention']['overall_inattention']}", (10, 90),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                cv2.putText(temp_frame, f"Current Head State: {currentHeadState}", (10, 120),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                cv2.putText(temp_frame, f"Mean EAR: {meanEAR}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                cv2.putText(temp_frame, f"Yawn Text: {yawnText}", (10, 180), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                # cv2.putText(temp_frame, f"Eye Attention L/R: {left_eye['attention']['overall_inattention']} "
+                #                         f"{right_eye['attention']['overall_inattention']}", (10, 90),
+                #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                # cv2.putText(temp_frame, f"Current Head State: {currentHeadState}", (10, 120),
+                
+                
+                # Head State
+                #cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                cv2.putText(Background,currentHeadState,(65,537),fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale=1.5,color=CONSTANTS.RED_COLOR,thickness=3,lineType=cv2.LINE_8) 
+
+                # MEAR EAR
+                # cv2.putText(temp_frame, f"Mean EAR: {meanEAR}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                cv2.putText(Background,str(round(meanEAR,3)),(65,290),fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale=1.8,color=CONSTANTS.BLACK_COLOR,thickness=3,lineType=cv2.LINE_8) 
+
+
+                #Yawn Text
+                #cv2.putText(temp_frame, f"Yawn Text: {yawnText}", (10, 180), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                # print("--YAL-- : ", yawnAnalysisLog)
+                if Background is not None:
+                    cv2.putText(Background,str(yawnText),(70,674),fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale=0.85,color=CONSTANTS.BLACK_COLOR,thickness=2,lineType=cv2.LINE_8)
+                    cv2.putText(Background,str(yawnAnalysisLog.get("yawnCount","N/A")),(350,674),fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale=1.0,color=CONSTANTS.BLACK_COLOR,thickness=2,lineType=cv2.LINE_8)
+
+                    cv2.putText(Background,yawnAnalysisLog.get('yawnLabel',"N/A"),(70,754),fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale=0.85,color=CONSTANTS.BLACK_COLOR,thickness=2,lineType=cv2.LINE_8)
+                    cv2.putText(Background,str(yawnAnalysisLog.get('yawnCountTF',"N/A")),(350,754),fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale=1.0,color=CONSTANTS.BLACK_COLOR,thickness=2,lineType=cv2.LINE_8)
+                else:
+                    print("Background image is None, cannot place text.")
+
 
                 if analysis_dict:
                     with analysis_dict_lock:
@@ -101,20 +145,31 @@ def getVideoFeed():
 
                 
             else:
+                #notdone
                 # No facial landmarks detected
                 cv2.putText(temp_frame, "Face Not Detected", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
                 dataDict['data'] = False
             
 
             if LABEL != "NONE":
-                    cv2.putText(temp_frame, f"LABEL: {LABEL}", (10, 250), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
-                    cv2.putText(temp_frame, f"COUNT: {count}", (10, 280), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
-                    cv2.putText(temp_frame, f"EYE: {eye_STATUS}", (10, 320), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
-                    cv2.putText(temp_frame, f"Message: {suggested_message}", (10, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.7,
-                                (255, 0, 0), 2)
+                    # cv2.putText(temp_frame, f"LABEL: {LABEL}", (10, 250), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+                    cv2.putText(Background,LABEL,(1294,163),fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale=1.2,color=CONSTANTS.LABEL_COLOR,thickness=3,lineType=cv2.LINE_8)
+
+                    # cv2.putText(temp_frame, f"COUNT: {count}", (10, 280), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+                    cv2.putText(Background,f"{str(count)} Secs",(1294,288),fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale=1.8,color=CONSTANTS.BLUE_COLOR,thickness=3,lineType=cv2.LINE_8)
+
+                    #Eye State
+                    #cv2.putText(temp_frame, f"EYE: {eye_STATUS}", (49, 336), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+                    cv2.putText(Background,f"{eye_STATUS}",(69,420),fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale=1.8,color=CONSTANTS.BLUE_COLOR,thickness=3,lineType=cv2.LINE_8)
+
+
+
+                    # cv2.putText(Background,meanEAR,(210,49),fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale=1.8,color=CONSTANTS.BLACK_COLOR,thickness=3,lineType=cv2.LINE_8)
+                    # cv2.putText(temp_frame, f"Message: {suggested_message}", (10, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.7,
+                    #             (255, 0, 0), 2)
 
             # Show the frame
-            cv2.imshow("Driver Monitoring System", temp_frame)
+            cv2.imshow("Driver Monitoring System", Background)
 
         except Exception as e:
             print(f"Error during video feed processing: {e}")
@@ -127,27 +182,84 @@ def getVideoFeed():
     cv2.destroyAllWindows()
 
 
-def getRealEmoText():
-    global terminate, frame, analysis_dict
 
+
+
+def logIntoDb(): 
+    global LABEL,last_label ,eye_STATUS,Background,dataDict
+    # global location
+
+    
+    print("[LOCATION] : ", locationServer.location)
     while not terminate:
-        event.wait()
-        with frame_lock:
-            temp_frame = frame.copy() if frame is not None else None
 
-        if temp_frame is not None:
-            try:
-                with analysis_dict_lock:
-                    analysis_dict = faceexpression.getFaceExpression(temp_frame)
-            except Exception as e:
-                print(f"Error in face expression detection: {e}")
+        
 
-        time.sleep(2)
+        if last_label == None : 
+            last_label  = LABEL 
+        elif LABEL != "None" and LABEL != last_label: 
+            last_label = LABEL
+     
+        
+            # inserting into database
+
+            yawn_phase_count = dataDict.get('yawnAnalysisLog')['yawnCountTF']
+            yawn_phase_state = dataDict.get('yawnAnalysisLog')['yawnLabel']
+            reported_ear = dataDict.get('meanEAR')
+            lat = float(locationServer.location['latitude'])
+            long = float(locationServer.location['longitude'])
+            head_state = dataDict.get('currentHeadState')
+
+            firestore_instance.insert_into_db(
+                head_state=head_state,
+                eye_state=eye_STATUS, 
+                hazard_status=LABEL, 
+                yawn_phase_count=yawn_phase_count,
+                yawn_phase_state=yawn_phase_state, 
+                reported_ear=float(reported_ear), 
+                sos_state=False,
+                current_vehicle_status="STOPPED",
+                alcohol_quantity="20%", 
+                driver_reported_image="",
+                lat=lat, 
+                long=long, 
+                location_text=str(locationServer.location['address']),
+                maps_link=f"https://www.google.com/maps?q={lat},{long}"
+            )
+
+            logtime = datetime.datetime.now()
+            print(f"[DATABASE] Logged Into Database : {logtime.strftime("%d/%m/%Y, %H:%M:%S")}")
+
+
+            
+
+
+
+# def getRealEmoText():
+#     global terminate, frame, analysis_dict
+
+#     # PASSING TO skip the facial emotion module
+#     pass 
+#     while not terminate:
+#         event.wait()
+#         with frame_lock:
+#             temp_frame = frame.copy() if frame is not None else None
+
+#         if temp_frame is not None:
+#             try:
+#                 with analysis_dict_lock:
+#                     analysis_dict = faceexpression.getFaceExpression(temp_frame)
+#             except Exception as e:
+#                 print(f"Error in face expression detection: {e}")
+
+#         time.sleep(2)
 
 
 def runStateProcessCounter():
-    global LABEL, count, suggested_message, dataDict
+    global LABEL, last_label,count, suggested_message, dataDict
 
+
+    print(f"[PROCESS/T3] : Starting Process Counter")
     clocktimer = clockTimer()  # Timer object
     clocktimer.resetTimer()
 
@@ -155,8 +267,10 @@ def runStateProcessCounter():
         time.sleep(1)
         try:
             LABEL, count = processData(dataDict, clocktimer,20,True)
+            
+             
             playAlarm(LABEL)
-            print(" Yawn Dict :", dataDict.get('yawnAnalysisLog'))
+            # print(" Yawn Dict :", dataDict.get('yawnAnalysisLog'))
             suggested_message = processPassiveData(dataDict.get('yawnAnalysisLog'),"NONE","NONE",True)
             print("Suggested Message",suggested_message)
         except Exception as e:

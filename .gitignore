@@ -1,0 +1,6 @@
+serviceAccountKey.json
+.env
+fetchFireDb.js
+node_modules
+components/_pycache_
+_pycache_

@@ -71,6 +71,7 @@ class YawnDetection:
                     pass
 
                 yawn_analysis = { 
+                    "yawnCount":self.yawn_counter,
                     "yawnCountTF":yawnCountTF,
                     "yawnLabel":yawnLabel,
                     'timePeriodRun':timePeriodRun
