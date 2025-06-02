@@ -4,9 +4,9 @@ import json
 
 
 location = {
-        "latitude":"32.89",
-        "longitude":"78.90",
-        "address":"Clemant Town, Dehradoon"
+        "latitude":" 28.974033",
+        "longitude":"77.640352",
+        "address":"Delhi Roorkee Bypass Road, Meerut Rural, Meerut 250005, Uttar Pradesh Meerut Rural Meerut Uttar Pradesh India"
 }
 
 async def receive_location():

@@ -8,13 +8,14 @@ from components.faceMesh import GetFaceMesh
 from components.eyeballTrack import Eyeball
 from components.projectUtils import UtlilitesFunction
 import locationServer
+from sendSms import sms_notifier
 # from components.faceExpression import FaceExpression
 from process import processData,processPassiveData
 from timerClock import clockTimer
 from audioAlert import playAlarm
 from dbCon import firestore_instance
 import CONSTANTS
-import datetime
+import datetime,serial
 
 
 
@@ -26,6 +27,7 @@ terminate = False
 frame = None
 eye_STATUS = "NONE"
 LABEL = "NONE"
+CON_STATUS = "NOT CON"
 last_label = None
 count = 0
 yawnAnalysisLog = {}
@@ -34,6 +36,7 @@ right_eye = {}
 dataDict = {'data': False}
 suggested_message = "NONE"
 Background = None
+CONTACT = "+917004433613"
 
 # Thread synchronization and locks
 event = Event()
@@ -49,6 +52,11 @@ yawnstatus = YawnDetection()
 eyeballtrack = Eyeball()
 # faceexpression = FaceExpression()
 util = UtlilitesFunction()
+try:
+    ser = serial.Serial('COM3', 9600)
+    CON_STATUS = "CONNECTED"
+except: 
+    pass
 
 
 
@@ -62,7 +70,7 @@ def getVideoFeed():
     while not terminate:
 
 
-        Background = cv2.imread("./resources/skeleton2.png")
+        Background = cv2.imread("./resources/skeleton3.png")
 
 
         isframe, temp_frame = capture.read()
@@ -158,6 +166,10 @@ def getVideoFeed():
                     # cv2.putText(temp_frame, f"COUNT: {count}", (10, 280), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
                     cv2.putText(Background,f"{str(count)} Secs",(1294,288),fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale=1.8,color=CONSTANTS.BLUE_COLOR,thickness=3,lineType=cv2.LINE_8)
 
+
+                    #Utilities 
+                   
+
                     #Eye State
                     #cv2.putText(temp_frame, f"EYE: {eye_STATUS}", (49, 336), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
                     cv2.putText(Background,f"{eye_STATUS}",(69,420),fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale=1.8,color=CONSTANTS.BLUE_COLOR,thickness=3,lineType=cv2.LINE_8)
@@ -203,12 +215,12 @@ def logIntoDb():
         
             # inserting into database
 
-            yawn_phase_count = dataDict.get('yawnAnalysisLog')['yawnCountTF']
-            yawn_phase_state = dataDict.get('yawnAnalysisLog')['yawnLabel']
-            reported_ear = dataDict.get('meanEAR')
+            yawn_phase_count = dataDict.get('yawnAnalysisLog', {}).get('yawnCountTF', "N/A")
+            yawn_phase_state = dataDict.get('yawnAnalysisLog', {}).get('yawnLabel', "N/A")
+            reported_ear = dataDict.get('meanEAR',0.0)
             lat = float(locationServer.location['latitude'])
             long = float(locationServer.location['longitude'])
-            head_state = dataDict.get('currentHeadState')
+            head_state = dataDict.get('currentHeadState',"NO_STATE")
 
             firestore_instance.insert_into_db(
                 head_state=head_state,
@@ -221,14 +233,16 @@ def logIntoDb():
                 current_vehicle_status="STOPPED",
                 alcohol_quantity="20%", 
                 driver_reported_image="",
-                lat=lat, 
-                long=long, 
+                lat=locationServer.location['latitude'], 
+                long=locationServer.location['longitude'], 
                 location_text=str(locationServer.location['address']),
-                maps_link=f"https://www.google.com/maps?q={lat},{long}"
+                maps_link=f"https://www.google.com/maps?q={'28.974033'},{'77.640352'}"
             )
 
             logtime = datetime.datetime.now()
-            print(f"[DATABASE] Logged Into Database : {logtime.strftime("%d/%m/%Y, %H:%M:%S")}")
+            message = f"[DATABASE] Logged Into Database : {logtime.strftime(' %d/%m/%Y, %H:%M:%S ')}"
+            print(message)
+            cv2.putText(Background,str(message), (544,750),fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=1.5,color=(255,255,255),thickness=2,lineType=cv2.LINE_4)
 
 
             
@@ -256,7 +270,8 @@ def logIntoDb():
 
 
 def runStateProcessCounter():
-    global LABEL, last_label,count, suggested_message, dataDict
+    global LABEL, last_label,count, suggested_message, dataDict,Background
+    global CONTACT
 
 
     print(f"[PROCESS/T3] : Starting Process Counter")
@@ -267,12 +282,78 @@ def runStateProcessCounter():
         time.sleep(1)
         try:
             LABEL, count = processData(dataDict, clocktimer,20,True)
-            
-             
-            playAlarm(LABEL)
-            # print(" Yawn Dict :", dataDict.get('yawnAnalysisLog'))
+            state = 1
+            hazard_alert_sent = False
+
+            # playing alarm
+            playAlarm(LABEL)       
+
+
+            try: 
+                if LABEL == "SAFE": 
+                    state = 1    
+                    hazard_alert_sent = False
+                    try: 
+                        ser.write(str(state).encode())
+                    except:
+                        pass
+
+                elif LABEL == "CAUTION": 
+                    state = 2
+                    try: 
+                        ser.write(str(state).encode())
+                    except:
+                        pass
+
+                    # Implement Twilio 
+                    if not hazard_alert_sent:
+                        loc_text,_link = sms_notifier.get_location_info()
+
+
+                        loc_text = "Delhi Roorkee Bypass Road, Meerut"
+                        _link = "https://maps.google.com/?q=28.9845,77.7064"
+
+                        sms_notifier.send_sms(f"🚨 Hazard Detected! Driver unresponsive\n location : {loc_text} \nLive Link : {_link}", CONTACT)
+                        logtime = datetime.datetime.now()
+                        message = f"[SMS API] Logged Into Database : {logtime.strftime(' %d/%m/%Y, %H:%M:%S ')}"
+                        cv2.putText(Background,str(message), (544,790),fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=1.5,color=(255,255,255),thickness=2,lineType=cv2.LINE_4)
+                elif LABEL == "HAZARD":
+                    state = 3 
+                    try: 
+                        ser.write(str(state).encode())
+                    except:
+                        pass
+                    
+                else : 
+                    try: 
+                        ser.flushInput()
+                        if ser.in_waiting > 0:
+                            line = ser.readline().decode('utf-8').strip()
+                            if line == '-1':
+                                LABEL = "HAZARD"; 
+                                state = 3
+                                ser.write(str(state).encode())
+                    except:
+                        pass
+ 
+                 
+
+            except Exception as e: 
+                print(f"Exception Occured in Sending state f{e}")
+
+
             suggested_message = processPassiveData(dataDict.get('yawnAnalysisLog'),"NONE","NONE",True)
-            print("Suggested Message",suggested_message)
+
+            if CON_STATUS == "CONNECTED" and Background is not None:
+                cv2.putText(Background,f"Status {state} Sent Successfully", (504,650),fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=1.5,color=(255,255,255),thickness=2,lineType=cv2.LINE_4) # STA_LOG2
+            else:
+                cv2.putText(Background,f"Please Conn the Controller", (534,670),fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=1.9,color=(255,255,255),thickness=2,lineType=cv2.LINE_4)
+
+            cv2.putText(Background,suggested_message, (534,750),fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=1.5,color=(255,255,255),thickness=2,lineType=cv2.LINE_4)
+
+ 
+            
+            # print("Suggested Message",suggested_message)
         except Exception as e:
             print(f"Error in state process counter: {e}")
 

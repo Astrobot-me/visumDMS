@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Live Location Sender</title>
+  <style>
+    #logs {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+    }
+    .log-entry {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <h2>Sending location...</h2>
+  <div id="logs"></div>
+  <script>
+    const socket = new WebSocket("ws://localhost:8000/ws/location");
+    const logsContainer = document.getElementById("logs");
+
+    function addLog(message) {
+      const logEntry = document.createElement("div");
+      logEntry.className = "log-entry";
+      logEntry.textContent = message;
+
+      // Add the new log entry
+      logsContainer.appendChild(logEntry);
+
+      // Remove the first log if there are more than 10 entries
+      if (logsContainer.children.length > 10) {
+        logsContainer.removeChild(logsContainer.firstChild);
+      }
+    }
+
+    socket.onopen = () => {
+      addLog("Connected to WebSocket server");
+
+      setInterval(() => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const data = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            };
+            try {
+              socket.send(JSON.stringify(data));
+              addLog(`Sent location: ${JSON.stringify(data)} : ${new Date().toISOString()}`);
+            } catch (error) {
+              addLog(`ERROR Sending :: ${error.message}`);
+            }
+          },
+          (error) => {
+            addLog(`ERROR Fetching Location :: ${error.message}`);
+          }
+        );
+      }, 1000);
+    };
+
+    socket.onerror = (error) => {
+        addLog(`WebSocket error: ${error.message || "An unknown error occurred"}`);
+        setInterval(() => {
+            window.location.reload();
+        }, 2000);
+        
+    };
+
+    socket.onclose = (event) => {
+        addLog(`WebSocket closed: Code ${event.code}, Reason: ${event.reason || "No reason provided"}`);
+        setInterval(() => {
+            window.location.reload();
+        }, 2000);
+    };
+
+    socket.onmessage = (msg) => {
+      addLog(`Message from server: ${msg.data}`);
+    };
+  </script>
+</body>
+</html>

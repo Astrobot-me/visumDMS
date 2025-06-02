@@ -3,4 +3,5 @@ serviceAccountKey.json
 fetchFireDb.js
 node_modules
 components/_pycache_
-_pycache_
+__pycache__
+keys.py
