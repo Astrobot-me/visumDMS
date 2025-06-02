@@ -90,11 +90,11 @@ def getVideoFeed():
 
         # print(Background.shape[0], Background.shape[1])
         # Background = util.rescaleFrame(Background,0.9)
-        Background[100:100+temp_frame.shape[0], 580:580+temp_frame.shape[1]] = temp_frame
+      
 
         try:
             # Getting facial landmarks
-            temp_frame, faces, facial_landmarks = meshDraw.findFaceMesh(temp_frame, draw=False)
+            temp_frame, faces, facial_landmarks = meshDraw.findFaceMesh(temp_frame, draw=True)
             state_frame = temp_frame.copy()
 
             if facial_landmarks.multi_face_landmarks:
@@ -110,7 +110,7 @@ def getVideoFeed():
                 # Eyeball Tracking
                 left_eye, right_eye = eyeballtrack.getIrisPos(facial_landmarks, temp_frame)
 
-                #base 64 image conversionn
+                Background[100:100+temp_frame.shape[0], 580:580+temp_frame.shape[1]] = temp_frame
 
                      
 

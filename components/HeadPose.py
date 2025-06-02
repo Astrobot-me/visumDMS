@@ -121,18 +121,18 @@ class HeadPose:
 
 
             # Ensure nose3d_realization has enough points before accessing them
-            if len(nose3d_realization) >= 3:
-                # Draw the X, Y, and Z axes
-                cv2.line(image, Nose_2dCords,x_axis , (0, 0, 255), 3)  # X-axis (red)
-                cv2.line(image, Nose_2dCords,y_axis , (0, 255, 0), 3)  # Y-axis (green)
-                cv2.line(image, Nose_2dCords, z_axis, (255, 0, 0), 3)  # Z-axis (blue)
+            # if len(nose3d_realization) >= 3:
+            #     # Draw the X, Y, and Z axes
+            #     cv2.line(image, Nose_2dCords,x_axis , (0, 0, 255), 3)  # X-axis (red)
+            #     cv2.line(image, Nose_2dCords,y_axis , (0, 255, 0), 3)  # Y-axis (green)
+            #     cv2.line(image, Nose_2dCords, z_axis, (255, 0, 0), 3)  # Z-axis (blue)
 
 
         
         # Add the text on the image
-        cv2.putText(image, "x: " + str(numpy.round(pitch, 2)), (10, 440), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-        cv2.putText(image, "y: " + str(numpy.round(yaw, 2)), (10, 470), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-        cv2.putText(image, "z: " + str(numpy.round(roll, 2)), (10, 500), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        # cv2.putText(image, "x: " + str(numpy.round(pitch, 2)), (10, 440), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        # cv2.putText(image, "y: " + str(numpy.round(yaw, 2)), (10, 470), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        # cv2.putText(image, "z: " + str(numpy.round(roll, 2)), (10, 500), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
         return image,currentstate,combinedstate
 

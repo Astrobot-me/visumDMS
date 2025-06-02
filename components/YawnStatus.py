@@ -59,13 +59,13 @@ class YawnDetection:
 
                 
 
-                cv2.putText(image, f"Yawn Ratio: {yawn_ratio:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                cv2.putText(image, f"Yawn Count: {self.yawn_counter}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                # cv2.putText(image, f"Yawn Ratio: {yawn_ratio:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                # cv2.putText(image, f"Yawn Count: {self.yawn_counter}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
                 try:
                     yawnCountTF,yawnLabel,timePeriodRun = self.getYawnsInTimeFrame(self.historyQueue,YAWN_TIMEFRAME)
-                    cv2.putText(image, f"Yawns in TP: {yawnCountTF}", (10, 340), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                    cv2.putText(image, f"Yawn Label: {yawnLabel}", (10, 370), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                    # cv2.putText(image, f"Yawns in TP: {yawnCountTF}", (10, 340), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                    # cv2.putText(image, f"Yawn Label: {yawnLabel}", (10, 370), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                 except Exception as e: 
                     print("ERROR OCCURED IN getYAWNTF",e)
                     pass
