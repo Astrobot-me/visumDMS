@@ -9,7 +9,7 @@ class FirestoreDB:
         self.db = firestore.client()
         self.collection_name = collection_name
 
-    def insert_into_db(self, head_state:str,eye_state:str,hazard_status: str, yawn_phase_state: str, yawn_phase_count:str,reported_ear: float,sos_state : bool,current_vehicle_status:str,alcohol_quantity:str,driver_reported_image:str,lat:float,long:float,
+    def insert_into_db(self, head_state:str,img_frame:str,eye_state:str,hazard_status: str, yawn_phase_state: str, yawn_phase_count:str,reported_ear: float,sos_state : bool,current_vehicle_status:str,alcohol_quantity:str,driver_reported_image:str,lat:float,long:float,
                         location_text: str,
                        maps_link: str):
         data = {
@@ -26,6 +26,7 @@ class FirestoreDB:
             "driver_reported_image":driver_reported_image,
             "location_text": location_text,
             "maps_link": maps_link,
+            "img_frame":img_frame,
             "timestamp": firestore.SERVER_TIMESTAMP
         }
         try:

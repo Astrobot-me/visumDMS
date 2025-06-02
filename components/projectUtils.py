@@ -1,5 +1,7 @@
 import cv2
 import math
+import base64
+import numpy as np
 
 class UtlilitesFunction:
     def __init__(self):
@@ -32,3 +34,18 @@ class UtlilitesFunction:
 
         scaledImage = cv2.resize(image,dimensions,interpolation=cv2.INTER_AREA)
         return scaledImage
+    
+
+    def convertToBase64(self, frame):
+        # Convert BGR to RGB (OpenCV uses BGR by default)
+        # rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        
+        # Encode image to JPEG
+        _, buffer = cv2.imencode('.jpg', frame)
+        
+        # Convert to base64
+        jpg_as_text = base64.b64encode(buffer).decode('utf-8')
+        
+        return jpg_as_text
+
+        

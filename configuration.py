@@ -16,6 +16,7 @@ from audioAlert import playAlarm
 from dbCon import firestore_instance
 import CONSTANTS
 import datetime,serial
+import numpy as np
 
 
 
@@ -25,6 +26,7 @@ combinedstate = "Not Detecting"
 analysis_dict = None
 terminate = False
 frame = None
+state_frame = None
 eye_STATUS = "NONE"
 LABEL = "NONE"
 CON_STATUS = "NOT CON"
@@ -62,7 +64,7 @@ except:
 
 
 def getVideoFeed():
-    global terminate, frame, eye_STATUS, dataDict, LABEL, suggested_message
+    global terminate, frame,state_frame, eye_STATUS, dataDict, LABEL, suggested_message
     global Background
 
     print(f"[VIDEOFEED/T1] : Starting Videofeed")
@@ -81,6 +83,7 @@ def getVideoFeed():
 
         with frame_lock:
             frame = temp_frame
+            state_frame = temp_frame.copy()
 
         event.set()
           # Notify other threads
@@ -92,6 +95,7 @@ def getVideoFeed():
         try:
             # Getting facial landmarks
             temp_frame, faces, facial_landmarks = meshDraw.findFaceMesh(temp_frame, draw=False)
+            state_frame = temp_frame.copy()
 
             if facial_landmarks.multi_face_landmarks:
                 # Head Tilt Status
@@ -105,6 +109,10 @@ def getVideoFeed():
 
                 # Eyeball Tracking
                 left_eye, right_eye = eyeballtrack.getIrisPos(facial_landmarks, temp_frame)
+
+                #base 64 image conversionn
+
+                     
 
                 # Update data dictionary
                 dataDict.update({
@@ -199,18 +207,33 @@ def getVideoFeed():
 
 def logIntoDb(): 
     global LABEL,last_label ,eye_STATUS,Background,dataDict
-    # global location
+    global frame,state_frame
 
     
     print("[LOCATION] : ", locationServer.location)
     while not terminate:
-
+        
         
 
         if last_label == None : 
             last_label  = LABEL 
         elif LABEL != "None" and LABEL != last_label: 
             last_label = LABEL
+            
+           
+            
+            try:
+                if state_frame is not None and isinstance(state_frame, np.ndarray):
+                    base64Text = util.convertToBase64(state_frame)
+                else:
+                    print("[logIntoDb] Warning: state_frame is None or invalid. Using placeholder.")
+                    base64img = cv2.imread(r"resources/placeholder.png")
+                    base64Text = util.convertToBase64(base64img)
+            except Exception as e:
+                print(f"[logIntoDb] Error during frame to base64 conversion: {e}")
+                return
+
+            # base64Text = util.frame_to_base64(state_frame)  
      
         
             # inserting into database
@@ -229,6 +252,7 @@ def logIntoDb():
                 yawn_phase_count=yawn_phase_count,
                 yawn_phase_state=yawn_phase_state, 
                 reported_ear=float(reported_ear), 
+                img_frame=base64Text,
                 sos_state=False,
                 current_vehicle_status="STOPPED",
                 alcohol_quantity="20%", 
@@ -313,7 +337,7 @@ def runStateProcessCounter():
                         loc_text = "Delhi Roorkee Bypass Road, Meerut"
                         _link = "https://maps.google.com/?q=28.9845,77.7064"
 
-                        sms_notifier.send_sms(f"🚨 Hazard Detected! Driver unresponsive\n location : {loc_text} \nLive Link : {_link}", CONTACT)
+                        # sms_notifier.send_sms(f"🚨 Hazard Detected! Driver unresponsive\n location : {loc_text} \nLive Link : {_link}", CONTACT)
                         logtime = datetime.datetime.now()
                         message = f"[SMS API] Logged Into Database : {logtime.strftime(' %d/%m/%Y, %H:%M:%S ')}"
                         cv2.putText(Background,str(message), (544,790),fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=1.5,color=(255,255,255),thickness=2,lineType=cv2.LINE_4)
