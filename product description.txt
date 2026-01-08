@@ -1,0 +1,22 @@
+Visum is an AI-powered Driver Monitoring System(DMS) and an Early Sign Drowsiness/ In-attention monitoring device, that is designed to monitor & prevent road accidents by detecting driver's fatigue & drowsiness. Using AI Powered Smart Algorithms & with bunch of advanced sensors, it analyzes eye movements,body pose and facial expressions in real time to assess alertness of the driver. When signs of drowsiness are detected, it triggers timely warnings or interventions, helping prevent accidents and ensuring safer journeys.
+
+It is meant to be placed in Old Trucks/Vehicle as a Independent Plug-n-Play type Unit, which don't have any such safety Monitoring & assisting Systems. 
+
+
+Correspondingly, we also offer an Dashboard especially designed for Truck Fleet Owners/ Comercial Vehicle Fleets , to monitor there fleet and driver's activity , enabling owners to actively look after the safety of the drivers 
+
+
+
+Visum is an AI-powered Driver Monitoring System (DMS) designed to detect early signs of driver drowsiness and inattention, helping to prevent road accidents. Powered by smart research-backed algorithms and IoT sensors, Visum analyzes eye movements, facial expressions, body posture and more parameters(to make it more accurate than others) in real time to assess driver alertness. When signs of fatigue are detected, it triggers timely alerts or interventions for safer journeys.
+
+As a plug-and-play unit, Visum is perfect for older trucks and commercial vehicles lacking modern safety systems. It requires no complex integration, making installation quick and hassle-free.
+
+What makes Visum unique is its all-in-one safety ecosystem. It includes real-time location tracking, SMS alerts for emergencies, a user-friendly dashboard for fleet managers, and an SOS button for immediate assistance. Its built-in black box securely records driving data and critical events for analysis. Our future versions i.e. Visum Pro will introduce autonomous driving assistance/parking in critical conditions(when driver is unresponsive), adding even more value.
+
+Alongside the hardware, Visum offers a dedicated fleet dashboard that enables real-time monitoring of vehicles and driver behavior, helping Comerical fleet owners improve safety, reduce risk, and manage operations more effectively.
+
+
+Visum is an AI-powered Driver Monitoring PnP System  designed to detect early signs of driver drowsiness and inattention, helping to prevent road accidents. Powered by smart, research-backed algorithms and IoT sensors. It analyzes eye movements, facial expressions, body posture, and other parameters to make assessments more accurate in real-time, evaluating driver alertness. When signs of fatigue are detected, it triggers timely alerts or interventions for safer journeys.
+
+
+Visum is an AI-powered Driver Monitoring Independent PnP system designed to detect early signs of driver drowsiness and inattention, helping to detect and prevent road accidents. Powered by intelligent, research-backed algorithms and IoT sensors, it analyzes eye movements, facial expressions, body posture, and other parameters to deliver real-time, accurate assessments of driver alertness. When signs of fatigue are detected, it triggers timely alerts or interventions, ensuring safer journeys.

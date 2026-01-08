@@ -17,6 +17,17 @@ from dbCon import firestore_instance
 import CONSTANTS
 import datetime,serial
 import numpy as np
+import asyncio
+from ws_server import broadcast_state , main
+
+
+ws_loop = asyncio.new_event_loop()
+
+def start_ws():
+    asyncio.set_event_loop(ws_loop)
+    ws_loop.run_until_complete(main())
+
+Thread(target=start_ws, daemon=True).start()
 
 
 
@@ -318,14 +329,22 @@ def runStateProcessCounter():
                     state = 1    
                     hazard_alert_sent = False
                     try: 
-                        ser.write(str(state).encode())
+                        # ser.write(str(state).encode())
+                        asyncio.run_coroutine_threadsafe(
+                            broadcast_state(state, LABEL),
+                            ws_loop
+                        )
                     except:
                         pass
 
                 elif LABEL == "CAUTION": 
                     state = 2
                     try: 
-                        ser.write(str(state).encode())
+                        # ser.write(str(state).encode())
+                        asyncio.run_coroutine_threadsafe(
+                            broadcast_state(state, LABEL),
+                            ws_loop
+                        )
                     except:
                         pass
 
@@ -344,7 +363,11 @@ def runStateProcessCounter():
                 elif LABEL == "HAZARD":
                     state = 3 
                     try: 
-                        ser.write(str(state).encode())
+                        # ser.write(str(state).encode())
+                        asyncio.run_coroutine_threadsafe(
+                            broadcast_state(state, LABEL),
+                            ws_loop
+                        )
                     except:
                         pass
                     
@@ -356,7 +379,11 @@ def runStateProcessCounter():
                             if line == '-1':
                                 LABEL = "HAZARD"; 
                                 state = 3
-                                ser.write(str(state).encode())
+                                # ser.write(str(state).encode())
+                                asyncio.run_coroutine_threadsafe(
+                                    broadcast_state(state, LABEL),
+                                    ws_loop
+                                )
                     except:
                         pass
  

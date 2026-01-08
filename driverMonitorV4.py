@@ -8,11 +8,14 @@ from audioAlert import playAlarm
 from configuration import logIntoDb
 from locationServer import start_location_thread
 
+
 thread1 = threading.Thread(target=getVideoFeed)
 # thread2 = threading.Thread(target=getRealEmoText)
 thread3 = threading.Thread(target=runStateProcessCounter)
 thread_location = threading.Thread(target=start_location_thread,daemon=True)
 thread4 = threading.Thread(target=logIntoDb)
+
+
 
 
 thread1.start()
